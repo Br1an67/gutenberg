@@ -8,7 +8,7 @@ import { useEffect } from '@wordpress/element';
 /**
  * Internal dependencies
  */
-import { store as editPostStore } from '../../store';
+import { store as editPostStore } from '../store';
 
 /**
  * Initializes WordPress `postboxes` script and the logic for saving meta boxes.
