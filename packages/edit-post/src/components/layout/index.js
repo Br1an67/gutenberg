@@ -22,7 +22,7 @@ import { store as blockEditorStore } from '@wordpress/block-editor';
 import { getLayoutStyles } from '@wordpress/global-styles-engine';
 import { PluginArea } from '@wordpress/plugins';
 import { __, sprintf } from '@wordpress/i18n';
-import { useCallback, useMemo } from '@wordpress/element';
+import { useCallback, useMemo, useReducer } from '@wordpress/element';
 import { store as noticesStore } from '@wordpress/notices';
 import { store as preferencesStore } from '@wordpress/preferences';
 import { privateApis as commandsPrivateApis } from '@wordpress/commands';
@@ -210,6 +210,13 @@ function Layout( {
 
 	useMetaBoxInitialization( hasActiveMetaboxes && hasResolvedMode );
 
+	// Holds the ref callback for the canvas document that’s needed to support
+	// the scroll-responsive split view adjustment.
+	const [
+		effectResizeMetaBoxMainOnWheel,
+		setEffectResizeMetaBoxMainOnWheel,
+	] = useReducer( ( _, incoming ) => incoming );
+
 	// Set the right context for the command palette
 	const commandContext = hasBlockSelected
 		? 'block-selection-edit'
@@ -338,6 +345,7 @@ function Layout( {
 						templateId={ templateId }
 						className={ className }
 						forceIsDirty={ hasActiveMetaboxes }
+						contentRef={ effectResizeMetaBoxMainOnWheel }
 						disableIframe={ ! shouldIframe }
 						// We should auto-focus the canvas (title) on load.
 						// eslint-disable-next-line jsx-a11y/no-autofocus
@@ -354,6 +362,7 @@ function Layout( {
 									isLegacy={
 										! shouldIframe || isDevicePreview
 									}
+									ref={ setEffectResizeMetaBoxMainOnWheel }
 								/>
 							)
 						}
