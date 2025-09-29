@@ -5,6 +5,7 @@ import clsx from 'clsx';
  */
 import { NavigableRegion } from '@wordpress/admin-ui';
 import {
+	Button,
 	privateApis as componentsPrivateApis,
 	Icon,
 	Tooltip,
@@ -26,7 +27,7 @@ import {
 	useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { chevronDown, chevronUp } from '@wordpress/icons';
+import { chevronDown, chevronUp, pinSmall } from '@wordpress/icons';
 import { store as preferencesStore } from '@wordpress/preferences';
 
 /**
@@ -197,13 +198,14 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 		{ keyboardDisplacement: 20, filterTaps: true }
 	);
 
+	const [ mayAutoAdjust, setMayAutoAdjust ] = useState( true );
 	const linerRef = useRef();
 	const getRenderValues = useEvent( () => ( { isOpen, min, openHeight } ) );
 
 	/** @type { EffectWheelResizing } */
 	const effectWheel = useRefEffect(
 		( canvas ) => {
-			if ( ! hasAnyVisible ) {
+			if ( ! hasAnyVisible || ! mayAutoAdjust ) {
 				return;
 			}
 			const iframe = canvas.ownerDocument.defaultView.frameElement;
@@ -265,7 +267,7 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				pane.removeEventListener( 'wheel', onWheel );
 			};
 		},
-		[ hasAnyVisible ]
+		[ hasAnyVisible, mayAutoAdjust ]
 	);
 	useImperativeHandle( ref, () => effectWheel, [ effectWheel ] );
 
@@ -377,6 +379,14 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 			<div className="edit-post-meta-boxes-main__presenter">
 				{ toggle }
 				{ separator }
+				<Button
+					label={ __( 'Disable auto-resizing' ) }
+					showTooltip
+					size="small"
+					icon={ pinSmall }
+					onClick={ () => setMayAutoAdjust( ! mayAutoAdjust ) }
+					isPressed={ ! mayAutoAdjust }
+				/>
 			</div>
 			{ contents }
 		</NavigableRegion>
