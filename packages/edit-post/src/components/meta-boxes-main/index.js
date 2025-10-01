@@ -8,6 +8,8 @@ import {
 	Button,
 	privateApis as componentsPrivateApis,
 	Icon,
+	Path,
+	SVG,
 	Tooltip,
 	VisuallyHidden,
 } from '@wordpress/components';
@@ -27,7 +29,7 @@ import {
 	useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { chevronDown, chevronUp, pinSmall } from '@wordpress/icons';
+import { chevronDown, chevronUp } from '@wordpress/icons';
 import { store as preferencesStore } from '@wordpress/preferences';
 
 /**
@@ -39,6 +41,27 @@ import MetaBoxes from '../meta-boxes';
 
 /** @type {{} & {useDrag: import('@use-gesture/react').useDrag}} */
 const { useDrag } = unlock( componentsPrivateApis );
+
+const magnet = (
+	<SVG
+		xmlns="http://www.w3.org/2000/svg"
+		width="24"
+		height="24"
+		viewBox="0 0 24 24"
+		style={ {
+			stroke: 'currentColor',
+			transform: `scale(${ 16 / 24 })`,
+			strokeWidth: 1.5 / ( 16 / 24 ),
+			strokeLinecap: 'round',
+			strokeLinejoin: 'round',
+			fill: 'none',
+		} }
+	>
+		<Path d="m12 15 4 4" />
+		<Path d="M2.352 10.648a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.029-6.029a1 1 0 1 1 3 3l-6.029 6.029a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l6.365-6.367A1 1 0 0 0 8.716 4.282z" />
+		<Path d="m5 8 4 4" />
+	</SVG>
+);
 
 /**
  * @template T
@@ -383,10 +406,10 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				{ toggle }
 				{ separator }
 				<Button
-					label={ __( 'Disable auto-resizing' ) }
+					label={ __( 'Enable auto-resizing' ) }
 					showTooltip
 					size="small"
-					icon={ pinSmall }
+					icon={ magnet }
 					onClick={ () =>
 						setPreference(
 							'core/edit-post',
@@ -394,7 +417,7 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 							! isAutoResize
 						)
 					}
-					isPressed={ ! isAutoResize }
+					isPressed={ isAutoResize }
 				/>
 			</div>
 			{ contents }
