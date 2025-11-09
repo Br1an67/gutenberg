@@ -1938,7 +1938,7 @@ class WP_Theme_JSON_Gutenberg {
 				$declarations[] = $theme_vars_declaration;
 			}
 
-			$stylesheet .= static::to_ruleset( $selector, $declarations );
+			$stylesheet .= WP_Style_Engine_Gutenberg::compile_css( $declarations, $selector );
 		}
 
 		return $stylesheet;
@@ -3048,7 +3048,7 @@ class WP_Theme_JSON_Gutenberg {
 
 		// 2. Generate and append the rules that use the general selector.
 		$general_selector = $element_only_selector ? $selector : ":root :where($selector)";
-		$block_rules     .= static::to_ruleset( $general_selector, $declarations );
+		$block_rules     .= WP_Style_Engine_Gutenberg::compile_css( $declarations, $general_selector );
 
 		// 3. Generate and append the rules that use the duotone selector.
 		if ( isset( $block_metadata['duotone'] ) && ! empty( $declarations_duotone ) ) {
