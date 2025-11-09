@@ -1767,7 +1767,7 @@ class WP_Theme_JSON_Gutenberg {
 										$spacing_rule['selector']
 									);
 								}
-								$block_rules .= static::to_ruleset( $layout_selector, $declarations );
+								$block_rules .= WP_Style_Engine_Gutenberg::compile_css( $declarations, $layout_selector );
 							}
 						}
 					}
@@ -1799,14 +1799,14 @@ class WP_Theme_JSON_Gutenberg {
 							$selector,
 							$class_name
 						);
-						$block_rules    .= static::to_ruleset(
-							$layout_selector,
+						$block_rules    .= WP_Style_Engine_Gutenberg::compile_css(
 							array(
 								array(
 									'name'  => 'display',
 									'value' => $layout_definition['displayMode'],
 								),
-							)
+							),
+							$layout_selector
 						);
 					}
 
@@ -1847,7 +1847,7 @@ class WP_Theme_JSON_Gutenberg {
 								$class_name,
 								$base_style_rule['selector']
 							);
-							$block_rules    .= static::to_ruleset( $layout_selector, $declarations );
+							$block_rules    .= WP_Style_Engine_Gutenberg::compile_css( $declarations, $layout_selector );
 						}
 					}
 				}
@@ -2002,14 +2002,14 @@ class WP_Theme_JSON_Gutenberg {
 
 					// $selector is often empty, so we can save ourselves the `append_to_selector()` call then.
 					$new_selector = '' === $selector ? $class_name : static::append_to_selector( $selector, $class_name );
-					$stylesheet  .= static::to_ruleset(
-						$new_selector,
+					$stylesheet  .= WP_Style_Engine_Gutenberg::compile_css(
 						array(
 							array(
 								'name'  => $property,
 								'value' => 'var(' . $css_var . ') !important',
 							),
-						)
+						),
+						$new_selector
 					);
 				}
 			}
@@ -3011,14 +3011,14 @@ class WP_Theme_JSON_Gutenberg {
 		 * and matches the behavior of the site editor.
 		 */
 		if ( $should_set_root_min_height ) {
-			$block_rules .= static::to_ruleset(
-				'html',
+			$block_rules .= WP_Style_Engine_Gutenberg::compile_css(
 				array(
 					array(
 						'name'  => 'min-height',
 						'value' => 'calc(100% - var(--wp-admin--admin-bar--height, 0px))',
 					),
-				)
+				),
+				'html'
 			);
 		}
 
@@ -3052,7 +3052,7 @@ class WP_Theme_JSON_Gutenberg {
 
 		// 3. Generate and append the rules that use the duotone selector.
 		if ( isset( $block_metadata['duotone'] ) && ! empty( $declarations_duotone ) ) {
-			$block_rules .= static::to_ruleset( $block_metadata['duotone'], $declarations_duotone );
+			$block_rules .= WP_Style_Engine_Gutenberg::compile_css( $declarations_duotone, $block_metadata['duotone'] );
 		}
 
 		// 4. Generate Layout block gap styles.
@@ -3065,12 +3065,12 @@ class WP_Theme_JSON_Gutenberg {
 
 		// 5. Generate and append the feature level rulesets.
 		foreach ( $feature_declarations as $feature_selector => $individual_feature_declarations ) {
-			$block_rules .= static::to_ruleset( ":root :where($feature_selector)", $individual_feature_declarations );
+			$block_rules .= WP_Style_Engine_Gutenberg::compile_css( $individual_feature_declarations, ":root :where($feature_selector)" );
 		}
 
 		// 6. Generate and append the style variation rulesets.
 		foreach ( $style_variation_declarations as $style_variation_selector => $individual_style_variation_declarations ) {
-			$block_rules .= static::to_ruleset( ":root :where($style_variation_selector)", $individual_style_variation_declarations );
+			$block_rules .= WP_Style_Engine_Gutenberg::compile_css( $individual_style_variation_declarations, ":root :where($style_variation_selector)" );
 			if ( isset( $style_variation_custom_css[ $style_variation_selector ] ) ) {
 				$block_rules .= $style_variation_custom_css[ $style_variation_selector ];
 			}
