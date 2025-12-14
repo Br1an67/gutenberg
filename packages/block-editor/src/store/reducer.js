@@ -1410,6 +1410,13 @@ function selectionHelper( state = {}, action ) {
 
 			return state;
 		}
+		case 'EDIT_CONTENT_ONLY_SECTION': {
+			// When stopping content-only editing (no clientId), also clear selection.
+			if ( ! action.clientId && state.clientId ) {
+				return {};
+			}
+			return state;
+		}
 		case 'SELECT_BLOCK':
 			if ( action.clientId === state.clientId ) {
 				return state;

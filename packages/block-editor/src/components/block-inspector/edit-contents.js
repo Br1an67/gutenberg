@@ -3,7 +3,7 @@
  */
 import { Button, __experimentalVStack as VStack } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useSelect } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 import { isReusableBlock, isTemplatePart } from '@wordpress/blocks';
 
 /**
@@ -59,11 +59,14 @@ function InlineEditButton( {
 	editContentOnlySection,
 	stopEditingContentOnlySection,
 } ) {
+	const { selectBlock } = useDispatch( blockEditorStore );
 	const handleClick = () => {
 		if ( ! editedContentOnlySection ) {
 			editContentOnlySection( clientId );
+			selectBlock( clientId );
 		} else {
 			stopEditingContentOnlySection();
+			selectBlock( clientId );
 		}
 	};
 

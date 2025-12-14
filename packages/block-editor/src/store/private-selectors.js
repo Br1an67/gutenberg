@@ -118,13 +118,18 @@ export function isContainerInsertableToInContentOnlyMode(
 function getEnabledClientIdsTreeUnmemoized( state, rootClientId ) {
 	const blockOrder = getBlockOrder( state, rootClientId );
 	const result = [];
+	// When editing a content-only section, show all blocks including disabled ones.
+	const showDisabledBlocks = !! state.editedContentOnlySection;
 
 	for ( const clientId of blockOrder ) {
 		const innerBlocks = getEnabledClientIdsTreeUnmemoized(
 			state,
 			clientId
 		);
-		if ( getBlockEditingMode( state, clientId ) !== 'disabled' ) {
+		const isDisabled =
+			getBlockEditingMode( state, clientId ) === 'disabled';
+
+		if ( ! isDisabled || showDisabledBlocks ) {
 			result.push( { clientId, innerBlocks } );
 		} else {
 			result.push( ...innerBlocks );
@@ -136,7 +141,8 @@ function getEnabledClientIdsTreeUnmemoized( state, rootClientId ) {
 
 /**
  * Returns a tree of block objects with only clientID and innerBlocks set.
- * Blocks with a 'disabled' editing mode are not included.
+ * Blocks with a 'disabled' editing mode are not included, unless a content-only
+ * section is being edited, in which case all blocks are included to show context.
  *
  * @param {Object}  state        Global application state.
  * @param {?string} rootClientId Optional root client ID of block list.
@@ -148,6 +154,7 @@ export const getEnabledClientIdsTree = createRegistrySelector( () =>
 		state.blocks.order,
 		state.derivedBlockEditingModes,
 		state.blockEditingModes,
+		state.editedContentOnlySection,
 	] )
 );
 
