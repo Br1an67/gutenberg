@@ -15,7 +15,7 @@ import {
 import { resolveSelect, useDispatch } from '@wordpress/data';
 import { Modal, DropZone, FormFileUpload, Button } from '@wordpress/components';
 import { upload as uploadIcon } from '@wordpress/icons';
-import { DataViewsPicker } from '@wordpress/dataviews';
+import { DataViewsPicker, filterSortAndPaginate } from '@wordpress/dataviews';
 import type { View, Field, ActionButton } from '@wordpress/dataviews';
 import {
 	altTextField,
@@ -233,6 +233,28 @@ export function MediaUploadModal( {
 				: allowedTypes;
 		}
 
+		// For infinite scroll, use offset-based pagination
+		// For regular pagination, use page-based pagination
+		if (
+			view.infiniteScrollEnabled &&
+			view.startPosition !== undefined &&
+			view.endPosition !== undefined
+		) {
+			// Use offset to fetch exact range needed for infinite scroll
+			const itemsNeeded = view.endPosition - view.startPosition + 1;
+
+			return {
+				offset: view.startPosition - 1,
+				per_page: itemsNeeded,
+				status: 'inherit',
+				order: view.sort?.direction,
+				orderby: view.sort?.field,
+				search: view.search,
+				...filters,
+			};
+		}
+
+		// Regular page-based pagination
 		return {
 			per_page: view.perPage || 20,
 			page: view.page || 1,
@@ -245,12 +267,12 @@ export function MediaUploadModal( {
 		};
 	}, [ view, allowedTypes ] );
 
-	// Fetch all media attachments using WordPress core data with permissions
+	// Fetch media attachments using WordPress core data with permissions
 	const {
 		records: mediaRecords,
 		isResolving: isLoadingRecords,
-		totalItems: totalItemsRaw,
-		totalPages: totalPagesRaw,
+		totalItems,
+		totalPages,
 	} = useEntityRecordsWithPermissions( 'postType', 'attachment', queryArgs );
 
 	const isLoading = isLoadingRecords;
@@ -285,6 +307,36 @@ export function MediaUploadModal( {
 			attachedToField as Field< RestAttachment >,
 		],
 		[]
+	);
+
+	// Apply client-side filtering, sorting, and pagination using filterSortAndPaginate
+	// when needed (e.g., for infinite scroll position-based slicing)
+	const processedData = useMemo( () => {
+		if ( ! mediaRecords ) {
+			return [];
+		}
+
+		// For infinite scroll, we need to use filterSortAndPaginate to slice
+		// the data based on startPosition and endPosition
+		if (
+			view.infiniteScrollEnabled &&
+			view.startPosition !== undefined &&
+			view.endPosition !== undefined
+		) {
+			return filterSortAndPaginate( mediaRecords, view, fields ).data;
+		}
+
+		// For regular pagination, use server-provided data as-is
+		return mediaRecords;
+	}, [ mediaRecords, view, fields ] );
+
+	// Always use server-provided total counts for pagination info
+	const paginationInfo = useMemo(
+		() => ( {
+			totalItems: totalItems || 0,
+			totalPages: totalPages || 0,
+		} ),
+		[ totalItems, totalPages ]
 	);
 
 	const actions: ActionButton< RestAttachment >[] = useMemo(
@@ -444,14 +496,6 @@ export function MediaUploadModal( {
 		]
 	);
 
-	const paginationInfo = useMemo(
-		() => ( {
-			totalItems: totalItemsRaw || 0,
-			totalPages: totalPagesRaw || 0,
-		} ),
-		[ totalItemsRaw, totalPagesRaw ]
-	);
-
 	const defaultLayouts = useMemo(
 		() => ( {
 			[ LAYOUT_PICKER_GRID ]: {
@@ -559,7 +603,7 @@ export function MediaUploadModal( {
 			/>
 			<DataViewsPicker
 				data={
-					( mediaRecords || [] ) as ( RestAttachment & {
+					processedData as ( RestAttachment & {
 						id: number;
 					} )[]
 				}
