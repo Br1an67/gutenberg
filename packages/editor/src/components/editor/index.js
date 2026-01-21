@@ -16,6 +16,7 @@ import { TEMPLATE_POST_TYPE } from '../../store/constants';
 import { useRestoreBlockFromPath } from '../../utils/block-selection-path';
 import EditorInterface from '../editor-interface';
 import { ExperimentalEditorProvider } from '../provider';
+import AttachmentEditorProvider from '../attachment-editor-provider';
 import Sidebar from '../sidebar';
 import NotesSidebar from '../collab-sidebar';
 import GlobalStylesSidebar from '../global-styles-sidebar';
@@ -146,17 +147,19 @@ function Editor( {
 					initialEdits={ initialEdits }
 					useSubRegistry={ false }
 				>
-					<EditorInterface { ...props }>
-						{ extraContent }
-					</EditorInterface>
-					{ children }
-					<Sidebar
-						onActionPerformed={ onActionPerformed }
-						extraPanels={ extraSidebarPanels }
-					/>
-					<NotesSidebar />
-					{ isBlockTheme && <GlobalStylesRenderer /> }
-					{ showGlobalStyles && <GlobalStylesSidebar /> }
+					<AttachmentEditorProvider>
+						<EditorInterface { ...props }>
+							{ extraContent }
+						</EditorInterface>
+						{ children }
+						<Sidebar
+							onActionPerformed={ onActionPerformed }
+							extraPanels={ extraSidebarPanels }
+						/>
+						<NotesSidebar />
+						{ isBlockTheme && <GlobalStylesRenderer /> }
+						{ showGlobalStyles && <GlobalStylesSidebar /> }
+					</AttachmentEditorProvider>
 				</ExperimentalEditorProvider>
 			) }
 		</>
