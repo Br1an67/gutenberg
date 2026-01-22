@@ -154,6 +154,11 @@ export interface Attachment {
 	featured_media?: number;
 	missing_image_sizes?: string[];
 	poster?: string;
+	meta?:
+		| []
+		| {
+				[ k: string ]: unknown;
+		  };
 }
 
 export type OnChangeHandler = ( attachments: Partial< Attachment >[] ) => void;
