@@ -87,40 +87,14 @@ function block_core_navigation_link_build_css_colors( $context, $attributes, $is
 }
 
 /**
- * Build an array with CSS classes and inline styles defining the font sizes
- * which will be applied to the navigation markup in the front-end.
+ * Returns the top-level submenu SVG chevron icon.
  *
  * @since 5.9.0
  *
- * @param  array $context Navigation block context.
- * @return array Font size CSS classes and inline styles.
+ * @return string
  */
-function block_core_navigation_link_build_css_font_sizes( $context ) {
-	// CSS classes.
-	$font_sizes = array(
-		'css_classes'   => array(),
-		'inline_styles' => '',
-	);
-
-	$has_named_font_size  = array_key_exists( 'fontSize', $context );
-	$has_custom_font_size = isset( $context['style']['typography']['fontSize'] );
-
-	if ( $has_named_font_size ) {
-		// Add the font size class.
-		$font_sizes['css_classes'][] = sprintf( 'has-%s-font-size', $context['fontSize'] );
-	} elseif ( $has_custom_font_size ) {
-		// Add the custom font size inline style.
-		$font_sizes['inline_styles'] = sprintf(
-			'font-size: %s;',
-			wp_get_typography_font_size_value(
-				array(
-					'size' => $context['style']['typography']['fontSize'],
-				)
-			)
-		);
-	}
-
-	return $font_sizes;
+function block_core_navigation_link_render_submenu_icon() {
+	return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false"><path d="M1.50002 4L6.00002 8L10.5 4" stroke-width="1.5"></path></svg>';
 }
 
 /**
@@ -180,7 +154,7 @@ function render_block_core_navigation_link( $attributes, $content, $block ) {
 		return '';
 	}
 
-	$font_sizes      = block_core_navigation_link_build_css_font_sizes( $block->context );
+	$font_sizes      = block_core_shared_navigation_build_css_font_sizes( $block->context );
 	$classes         = array_merge(
 		$font_sizes['css_classes']
 	);
