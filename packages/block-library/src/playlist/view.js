@@ -69,12 +69,12 @@ const { state } = store( 'core/playlist', {
 			if ( ! state.players[ context.playlistId ] ) {
 				const wavesurfer = WaveSurfer.create( {
 					container: ref,
-					waveColor: 'rgba(0, 0, 0, 0.3)',
-					progressColor: 'var(--wp--preset--color--primary, #3858e9)',
-					cursorColor: 'var(--wp--preset--color--primary, #3858e9)',
+					waveColor: 'rgba(89, 82, 88, 0.4)',
+					progressColor: 'var(--wp--preset--color--primary, #30272e)',
+					cursorColor: 'transparent',
 					barWidth: 2,
-					barRadius: 3,
-					cursorWidth: 2,
+					barRadius: 0,
+					cursorWidth: 0,
 					height: 80,
 					barGap: 2,
 					responsive: true,

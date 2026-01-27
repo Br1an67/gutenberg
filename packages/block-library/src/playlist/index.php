@@ -121,6 +121,23 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			</div>
 		</div>
 	</div>
+	<div class="wp-block-playlist__player">
+		<button
+			class="wp-block-playlist__play-button"
+			data-wp-on--click="actions.togglePlayPause"
+			data-wp-bind--aria-label="context.isPlaying ? \'Pause\' : \'Play\'"
+		>
+			<span class="wp-block-playlist__play-icon" data-wp-bind--hidden="context.isPlaying">
+				<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+					<path d="M8 5v14l11-7z"/>
+				</svg>
+			</span>
+			<span class="wp-block-playlist__pause-icon" data-wp-bind--hidden="!context.isPlaying">
+				<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+					<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+				</svg>
+			</span>
+		</button>
 		<div
 			class="wp-block-playlist__waveform"
 			data-wp-init="callbacks.initWaveSurfer"
@@ -130,6 +147,7 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			tabindex="0"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
 		></div>
+	</div>
 	';
 
 	// Add the HTML for the current track inside the figure.
