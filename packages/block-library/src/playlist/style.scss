@@ -6,6 +6,61 @@
 	border-radius: 2px;
 	padding: $grid-unit-20;
 
+	// Customize Plyr to match WordPress styling
+	.plyr {
+		border-radius: 4px;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	}
+
+	.plyr__controls {
+		background: transparent;
+		padding: 10px;
+		border-radius: 4px;
+	}
+
+	.plyr--audio .plyr__controls {
+		background: rgba(0, 0, 0, 0.03);
+		color: currentColor;
+	}
+
+	.plyr__control {
+		color: currentColor;
+
+		&:hover,
+		&:focus {
+			background: rgba(0, 0, 0, 0.1);
+		}
+
+		svg {
+			fill: currentColor;
+		}
+	}
+
+	.plyr__control--pressed {
+		background: rgba(0, 0, 0, 0.15);
+		color: currentColor;
+	}
+
+	// Progress bar styling
+	.plyr__progress input[type="range"] {
+		color: var(--wp--preset--color--primary, #3858e9);
+	}
+
+	.plyr__progress__buffer {
+		background: rgba(0, 0, 0, 0.1);
+	}
+
+	// Volume control
+	.plyr__volume input[type="range"] {
+		color: var(--wp--preset--color--primary, #3858e9);
+	}
+
+	// Time display
+	.plyr__time {
+		color: currentColor;
+		font-size: 13px;
+	}
+
 	.wp-block-playlist__current-item {
 		display: flex;
 		align-items: center;
