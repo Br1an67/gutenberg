@@ -1,4 +1,9 @@
 /**
+ * External dependencies
+ */
+import Plyr from 'plyr';
+
+/**
  * WordPress dependencies
  */
 import { store, getContext, getElement } from '@wordpress/interactivity';
@@ -8,6 +13,7 @@ store(
 	{
 		state: {
 			playlists: {},
+			players: {},
 			get currentTrack() {
 				const { currentId, playlistId } = getContext();
 				if ( ! currentId || ! playlistId ) {
@@ -47,20 +53,58 @@ store(
 				if ( nextTrack ) {
 					context.currentId = nextTrack;
 					const { ref } = getElement();
+					const player = this.state.players[ context.playlistId ];
 					// Waits a moment before changing the track, since
 					// immediately changing the track can be jarring.
 					setTimeout( () => {
-						ref.play();
+						if ( player ) {
+							player.play();
+						} else {
+							ref.play();
+						}
 					}, 1000 );
 				}
 			},
 		},
 		callbacks: {
-			autoPlay() {
+			initPlyr() {
 				const context = getContext();
 				const { ref } = getElement();
-				if ( context.currentId && context.isPlaying ) {
-					ref.play();
+
+				// Only initialize if not already done
+				if ( ! this.state.players[ context.playlistId ] ) {
+					const player = new Plyr( ref, {
+						controls: [
+							'play',
+							'progress',
+							'current-time',
+							'mute',
+							'volume',
+						],
+					} );
+
+					this.state.players[ context.playlistId ] = player;
+
+					// Wire up Plyr events to Interactivity API
+					player.on( 'play', () => {
+						context.isPlaying = true;
+					} );
+
+					player.on( 'pause', () => {
+						context.isPlaying = false;
+					} );
+
+					player.on( 'ended', () => {
+						// Call nextSong action
+						this.actions.nextSong();
+					} );
+				}
+			},
+			autoPlay() {
+				const context = getContext();
+				const player = this.state.players[ context.playlistId ];
+				if ( context.currentId && context.isPlaying && player ) {
+					player.play();
 				}
 			},
 		},

@@ -632,7 +632,7 @@ Playlist track. ([Source](https://github.com/WordPress/gutenberg/tree/trunk/pack
 -	**Supports:** interactivity (clientNavigation), ~~html~~, ~~reusable~~
 -	**Attributes:** album, artist, blob, id, image, length, src, title, type, uniqueId
 
-## Post Author
+## Author
 
 Display post author details such as name, avatar, and bio. ([Source](https://github.com/WordPress/gutenberg/tree/trunk/packages/block-library/src/post-author))
 

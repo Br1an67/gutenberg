@@ -122,10 +122,7 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		</div>
 	</div>
 		<audio
-			controls="controls"
-			data-wp-on--ended="actions.nextSong"
-			data-wp-on--play="actions.isPlaying"
-			data-wp-on--pause="actions.isPaused"
+			data-wp-init="callbacks.initPlyr"
 			data-wp-bind--src="state.currentTrack.url"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
 			data-wp-watch="callbacks.autoPlay"
