@@ -1,64 +1,60 @@
 @use "@wordpress/base-styles/variables" as *;
-@import "plyr/dist/plyr.css";
 
 .wp-block-playlist {
 	border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 	border-radius: 2px;
 	padding: $grid-unit-20;
 
-	// Customize Plyr to match WordPress styling
-	.plyr {
+	// WaveSurfer container styling
+	.wp-block-playlist__waveform {
+		margin: $grid-unit-20 0;
+		background: rgba(0, 0, 0, 0.02);
 		border-radius: 4px;
-		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+		overflow: hidden;
+		cursor: pointer;
+
+		// WaveSurfer canvas
+		// stylelint-disable-next-line selector-type-no-unknown -- WaveSurfer creates a custom wave element
+		wave {
+			border-radius: 4px;
+		}
 	}
 
-	.plyr__controls {
-		background: transparent;
-		padding: 10px;
-		border-radius: 4px;
+	// Play/pause button styling
+	.wp-block-playlist__controls {
+		display: flex;
+		align-items: center;
+		gap: $grid-unit-10;
+		margin-top: $grid-unit-10;
 	}
 
-	.plyr--audio .plyr__controls {
-		background: rgba(0, 0, 0, 0.03);
-		color: currentColor;
-	}
+	.wp-block-playlist__play-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: 50%;
+		background: var(--wp--preset--color--primary, #3858e9);
+		color: #fff;
+		cursor: pointer;
+		transition: background 0.2s ease;
 
-	.plyr__control {
-		color: currentColor;
+		&:hover {
+			background: color-mix(in srgb, var(--wp--preset--color--primary, #3858e9) 90%, #000);
+		}
 
-		&:hover,
 		&:focus {
-			background: rgba(0, 0, 0, 0.1);
+			outline: 2px solid var(--wp--preset--color--primary, #3858e9);
+			outline-offset: 2px;
 		}
 
 		svg {
+			width: 20px;
+			height: 20px;
 			fill: currentColor;
 		}
-	}
-
-	.plyr__control--pressed {
-		background: rgba(0, 0, 0, 0.15);
-		color: currentColor;
-	}
-
-	// Progress bar styling
-	.plyr__progress input[type="range"] {
-		color: var(--wp--preset--color--primary, #3858e9);
-	}
-
-	.plyr__progress__buffer {
-		background: rgba(0, 0, 0, 0.1);
-	}
-
-	// Volume control
-	.plyr__volume input[type="range"] {
-		color: var(--wp--preset--color--primary, #3858e9);
-	}
-
-	// Time display
-	.plyr__time {
-		color: currentColor;
-		font-size: 13px;
 	}
 
 	.wp-block-playlist__current-item {

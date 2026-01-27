@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import Plyr from 'plyr';
+import WaveSurfer from 'wavesurfer.js';
 
 /**
  * WordPress dependencies
@@ -34,13 +34,12 @@ const { state } = store( 'core/playlist', {
 			context.currentId = context.uniqueId;
 			context.isPlaying = true;
 		},
-		isPlaying() {
+		togglePlayPause() {
 			const context = getContext();
-			context.isPlaying = true;
-		},
-		isPaused() {
-			const context = getContext();
-			context.isPlaying = false;
+			const player = state.players[ context.playlistId ];
+			if ( player ) {
+				player.playPause();
+			}
 		},
 		nextSong() {
 			const context = getContext();
@@ -62,34 +61,37 @@ const { state } = store( 'core/playlist', {
 		},
 	},
 	callbacks: {
-		initPlyr() {
+		initWaveSurfer() {
 			const context = getContext();
 			const { ref } = getElement();
 
 			// Only initialize if not already done
 			if ( ! state.players[ context.playlistId ] ) {
-				const player = new Plyr( ref, {
-					controls: [
-						'play',
-						'progress',
-						'current-time',
-						'mute',
-						'volume',
-					],
+				const wavesurfer = WaveSurfer.create( {
+					container: ref,
+					waveColor: 'rgba(0, 0, 0, 0.3)',
+					progressColor: 'var(--wp--preset--color--primary, #3858e9)',
+					cursorColor: 'var(--wp--preset--color--primary, #3858e9)',
+					barWidth: 2,
+					barRadius: 3,
+					cursorWidth: 2,
+					height: 80,
+					barGap: 2,
+					responsive: true,
 				} );
 
-				state.players[ context.playlistId ] = player;
+				state.players[ context.playlistId ] = wavesurfer;
 
-				// Wire up Plyr events to Interactivity API
-				player.on( 'play', () => {
+				// Wire up WaveSurfer events to Interactivity API
+				wavesurfer.on( 'play', () => {
 					context.isPlaying = true;
 				} );
 
-				player.on( 'pause', () => {
+				wavesurfer.on( 'pause', () => {
 					context.isPlaying = false;
 				} );
 
-				player.on( 'ended', () => {
+				wavesurfer.on( 'finish', () => {
 					// Trigger next song
 					const currentIndex = context.tracks.findIndex(
 						( uniqueId ) => uniqueId === context.currentId
@@ -98,10 +100,19 @@ const { state } = store( 'core/playlist', {
 					if ( nextTrack ) {
 						context.currentId = nextTrack;
 						setTimeout( () => {
-							player.play();
+							wavesurfer.play();
 						}, 1000 );
 					}
 				} );
+			}
+		},
+		loadTrack() {
+			const context = getContext();
+			const player = state.players[ context.playlistId ];
+			const trackUrl = state.currentTrack.url;
+
+			if ( player && trackUrl ) {
+				player.load( trackUrl );
 			}
 		},
 		autoPlay() {

@@ -121,12 +121,15 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 			</div>
 		</div>
 	</div>
-		<audio
-			data-wp-init="callbacks.initPlyr"
-			data-wp-bind--src="state.currentTrack.url"
+		<div
+			class="wp-block-playlist__waveform"
+			data-wp-init="callbacks.initWaveSurfer"
+			data-wp-watch="callbacks.loadTrack"
+			data-wp-on--click="actions.togglePlayPause"
+			role="button"
+			tabindex="0"
 			data-wp-bind--aria-label="state.currentTrack.ariaLabel"
-			data-wp-watch="callbacks.autoPlay"
-		></audio>
+		></div>
 	';
 
 	// Add the HTML for the current track inside the figure.
