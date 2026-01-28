@@ -7,7 +7,8 @@ import { v4 as uuid } from 'uuid';
 /**
  * WordPress dependencies
  */
-import { useState, useCallback, useEffect } from '@wordpress/element';
+import { useState, useCallback, useEffect, useRef } from '@wordpress/element';
+import { SVG, Path } from '@wordpress/primitives';
 import {
 	store as blockEditorStore,
 	MediaPlaceholder,
@@ -28,9 +29,9 @@ import {
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
-import { __, _x, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 import { audio as icon } from '@wordpress/icons';
-import { safeHTML, __unstableStripHTML as stripHTML } from '@wordpress/dom';
+import { safeHTML } from '@wordpress/dom';
 import { createBlock } from '@wordpress/blocks';
 
 /**
@@ -40,7 +41,147 @@ import { Caption } from '../utils/caption';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 
-const CurrentTrack = ( { track, showImages, onTrackEnd } ) => {
+const WaveSurferPlayer = ( { trackUrl, onEnded } ) => {
+	const containerRef = useRef( null );
+	const wavesurferRef = useRef( null );
+	const initializedRef = useRef( false );
+	const [ isPlaying, setIsPlaying ] = useState( false );
+	const [ isReady, setIsReady ] = useState( false );
+
+	// Initialize WaveSurfer when component mounts
+
+	useEffect( () => {
+		if ( ! containerRef.current || initializedRef.current ) {
+			return;
+		}
+
+		initializedRef.current = true;
+		let wavesurfer = null;
+
+		// Load WaveSurfer script into the iframe's document context
+		const initWaveSurfer = async () => {
+			const container = containerRef.current;
+			if ( ! container ) {
+				return;
+			}
+
+			const iframeWindow = container.ownerDocument.defaultView;
+			const iframeDocument = container.ownerDocument;
+
+			try {
+				// Check if WaveSurfer is already loaded in the iframe
+				if ( ! iframeWindow.WaveSurfer ) {
+					// Load WaveSurfer script into iframe
+					const script = iframeDocument.createElement( 'script' );
+					script.type = 'module';
+					script.textContent = `
+						import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js';
+						window.WaveSurfer = WaveSurfer;
+						window.waveSurferLoaded = true;
+					`;
+					iframeDocument.head.appendChild( script );
+
+					// Wait for script to load
+					await new Promise( ( resolve ) => {
+						const checkLoaded = setInterval( () => {
+							if ( iframeWindow.waveSurferLoaded ) {
+								clearInterval( checkLoaded );
+								resolve();
+							}
+						}, 100 );
+					} );
+				}
+
+				// Get the computed color from the container
+				const containerStyles =
+					iframeWindow.getComputedStyle( container );
+				const color = containerStyles.getPropertyValue( 'color' );
+
+				// Create WaveSurfer instance using the iframe's WaveSurfer
+				wavesurfer = iframeWindow.WaveSurfer.create( {
+					container,
+					waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
+					progressColor: color,
+					cursorColor: color,
+					cursorWidth: 2,
+					barWidth: 2,
+					barRadius: 0,
+					height: 80,
+					barGap: 2,
+					responsive: true,
+				} );
+
+				wavesurferRef.current = wavesurfer;
+				setIsReady( true );
+
+				// Wire up events
+				wavesurfer.on( 'play', () => setIsPlaying( true ) );
+				wavesurfer.on( 'pause', () => setIsPlaying( false ) );
+				wavesurfer.on( 'finish', () => {
+					setIsPlaying( false );
+					if ( onEnded ) {
+						onEnded();
+					}
+				} );
+			} catch ( error ) {
+				// eslint-disable-next-line no-console
+				console.error( 'Failed to initialize WaveSurfer:', error );
+			}
+		};
+
+		initWaveSurfer();
+
+		// Cleanup
+		return () => {
+			if ( wavesurfer ) {
+				wavesurfer.destroy();
+			}
+		};
+	}, [ onEnded ] );
+
+	// Load track when URL changes
+	useEffect( () => {
+		if ( isReady && wavesurferRef.current && trackUrl ) {
+			wavesurferRef.current.load( trackUrl );
+		}
+	}, [ trackUrl, isReady ] );
+
+	const handlePlayPause = () => {
+		if ( wavesurferRef.current ) {
+			wavesurferRef.current.playPause();
+		}
+	};
+
+	return (
+		<div className="wp-block-playlist__player">
+			<button
+				className="wp-block-playlist__play-button"
+				onClick={ handlePlayPause }
+				aria-label={ isPlaying ? __( 'Pause' ) : __( 'Play' ) }
+			>
+				<span
+					className="wp-block-playlist__play-icon"
+					hidden={ isPlaying }
+				>
+					<SVG viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+						<Path d="M6.5 5.5v13l11-6.5z" />
+					</SVG>
+				</span>
+				<span
+					className="wp-block-playlist__pause-icon"
+					hidden={ ! isPlaying }
+				>
+					<SVG viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+						<Path d="M6 5.5h4v13H6v-13zm8 0h4v13h-4v-13z" />
+					</SVG>
+				</span>
+			</button>
+			<div ref={ containerRef } className="wp-block-playlist__waveform" />
+		</div>
+	);
+};
+
+const CurrentTrack = ( { track, showImages } ) => {
 	/**
 	 * dangerouslySetInnerHTML and safeHTML are used because
 	 * the media library allows using some HTML tags in the title, artist, and album fields.
@@ -65,69 +206,40 @@ const CurrentTrack = ( { track, showImages, onTrackEnd } ) => {
 		},
 	};
 
-	let ariaLabel;
-	if ( track?.title && track?.artist && track?.album ) {
-		ariaLabel = stripHTML(
-			sprintf(
-				/* translators: %1$s: track title, %2$s artist name, %3$s: album name. */
-				_x(
-					'%1$s by %2$s from the album %3$s',
-					'track title, artist name, album name'
-				),
-				track?.title,
-				track?.artist,
-				track?.album
-			)
-		);
-	} else if ( track?.title ) {
-		ariaLabel = stripHTML( track.title );
-	} else {
-		ariaLabel = stripHTML( __( 'Untitled' ) );
-	}
-
 	return (
-		<>
-			<div className="wp-block-playlist__current-item">
-				{ showImages && track?.image && (
-					<img
-						className="wp-block-playlist__item-image"
-						src={ track.image }
-						alt=""
-						width="70px"
-						height="70px"
+		<div className="wp-block-playlist__current-item">
+			{ showImages && track?.image && (
+				<img
+					className="wp-block-playlist__item-image"
+					src={ track.image }
+					alt=""
+					width="70px"
+					height="70px"
+				/>
+			) }
+			<div>
+				{ ! track?.title ? (
+					<span className="wp-block-playlist__item-title">
+						<Spinner />
+					</span>
+				) : (
+					<span
+						className="wp-block-playlist__item-title"
+						{ ...trackTitle }
 					/>
 				) }
-				<div>
-					{ ! track?.title ? (
-						<span className="wp-block-playlist__item-title">
-							<Spinner />
-						</span>
-					) : (
-						<span
-							className="wp-block-playlist__item-title"
-							{ ...trackTitle }
-						/>
-					) }
-					<div className="wp-block-playlist__current-item-artist-album">
-						<span
-							className="wp-block-playlist__item-artist"
-							{ ...trackArtist }
-						/>
-						<span
-							className="wp-block-playlist__item-album"
-							{ ...trackAlbum }
-						/>
-					</div>
+				<div className="wp-block-playlist__current-item-artist-album">
+					<span
+						className="wp-block-playlist__item-artist"
+						{ ...trackArtist }
+					/>
+					<span
+						className="wp-block-playlist__item-album"
+						{ ...trackAlbum }
+					/>
 				</div>
 			</div>
-			<audio
-				controls="controls"
-				src={ track?.url ? track.url : '' }
-				onEnded={ onTrackEnd }
-				aria-label={ ariaLabel }
-				tabIndex={ 0 }
-			/>
-		</>
+		</div>
 	);
 };
 
@@ -444,9 +556,12 @@ const PlaylistEdit = ( {
 					<CurrentTrack
 						track={ tracks[ trackListIndex ] }
 						showImages={ showImages }
-						onTrackEnd={ onTrackEnd }
 					/>
 				</Disabled>
+				<WaveSurferPlayer
+					trackUrl={ tracks[ trackListIndex ]?.src || '' }
+					onEnded={ onTrackEnd }
+				/>
 				{ showTracklist && (
 					<TagName className="wp-block-playlist__tracklist">
 						{ innerBlocksProps.children }

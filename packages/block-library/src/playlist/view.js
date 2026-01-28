@@ -67,14 +67,18 @@ const { state } = store( 'core/playlist', {
 
 			// Only initialize if not already done
 			if ( ! state.players[ context.playlistId ] ) {
+				// Get the computed color from the container
+				const containerStyles = window.getComputedStyle( ref );
+				const color = containerStyles.getPropertyValue( 'color' );
+
 				const wavesurfer = WaveSurfer.create( {
 					container: ref,
-					waveColor: 'rgba(89, 82, 88, 0.4)',
-					progressColor: 'var(--wp--preset--color--primary, #30272e)',
-					cursorColor: 'transparent',
+					waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
+					progressColor: color,
+					cursorColor: color,
+					cursorWidth: 2,
 					barWidth: 2,
 					barRadius: 0,
-					cursorWidth: 0,
 					height: 80,
 					barGap: 2,
 					responsive: true,

@@ -67,6 +67,9 @@
 		overflow: hidden;
 		cursor: pointer;
 		position: relative;
+		// Inherit theme colors
+		color: var(--wp--preset--color--contrast, currentColor);
+		background-color: var(--wp--preset--color--base, transparent);
 
 		// WaveSurfer canvas
 		// stylelint-disable-next-line selector-type-no-unknown -- WaveSurfer creates a custom wave element
