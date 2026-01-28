@@ -58,7 +58,7 @@ const WaveSurferPlayer = ( { trackUrl, onEnded } ) => {
 		initializedRef.current = true;
 		let wavesurfer = null;
 
-		// Load WaveSurfer script into the iframe's document context
+		// Initialize WaveSurfer in the iframe's context
 		const initWaveSurfer = async () => {
 			const container = containerRef.current;
 			if ( ! container ) {
@@ -71,25 +71,36 @@ const WaveSurferPlayer = ( { trackUrl, onEnded } ) => {
 			try {
 				// Check if WaveSurfer is already loaded in the iframe
 				if ( ! iframeWindow.WaveSurfer ) {
-					// Load WaveSurfer script into iframe
-					const script = iframeDocument.createElement( 'script' );
-					script.type = 'module';
-					script.textContent = `
-						import WaveSurfer from 'https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.esm.js';
-						window.WaveSurfer = WaveSurfer;
-						window.waveSurferLoaded = true;
-					`;
-					iframeDocument.head.appendChild( script );
+					// Get the WaveSurfer script URL from the main window
+					const wavesurferUrl = window.wpPlaylistWaveSurferUrl;
 
-					// Wait for script to load
-					await new Promise( ( resolve ) => {
-						const checkLoaded = setInterval( () => {
-							if ( iframeWindow.waveSurferLoaded ) {
-								clearInterval( checkLoaded );
-								resolve();
-							}
-						}, 100 );
+					if ( ! wavesurferUrl ) {
+						throw new Error( 'WaveSurfer script URL not found' );
+					}
+
+					// Inject WaveSurfer script into the iframe
+					const script = iframeDocument.createElement( 'script' );
+					script.src = wavesurferUrl;
+
+					// Wait for the script to load
+					await new Promise( ( resolve, reject ) => {
+						script.onload = () => {
+							// Give it a moment to initialize
+							setTimeout( resolve, 50 );
+						};
+						script.onerror = () =>
+							reject(
+								new Error( 'Failed to load WaveSurfer script' )
+							);
+						iframeDocument.head.appendChild( script );
 					} );
+
+					// Verify WaveSurfer is available
+					if ( ! iframeWindow.WaveSurfer ) {
+						throw new Error(
+							'WaveSurfer not available after loading script'
+						);
+					}
 				}
 
 				// Get the computed color from the container

@@ -393,6 +393,15 @@ function gutenberg_register_vendor_scripts( $scripts ) {
 		array( 'react' ),
 		'18'
 	);
+
+	// Always use the minified version as it's the UMD build that sets window.WaveSurfer
+	gutenberg_override_script(
+		$scripts,
+		'wavesurfer',
+		gutenberg_url( 'node_modules/wavesurfer.js/dist/wavesurfer.min.js' ),
+		array(),
+		'7.12.1'
+	);
 }
 add_action( 'wp_default_scripts', 'gutenberg_register_vendor_scripts' );
 

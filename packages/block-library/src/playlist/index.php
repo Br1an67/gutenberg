@@ -81,6 +81,8 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		return '';
 	}
 
+	// Enqueue WaveSurfer only when this block is rendered
+	wp_enqueue_script( 'wavesurfer' );
 	wp_enqueue_script_module( '@wordpress/block-library/playlist/view' );
 
 	// Add the playlist tracks to the global state,
@@ -189,3 +191,30 @@ function register_block_core_playlist() {
 	);
 }
 add_action( 'init', 'register_block_core_playlist' );
+
+/**
+ * Enqueue WaveSurfer script for the playlist block editor.
+ * This ensures WaveSurfer is available in the editor iframe.
+ *
+ * @since 6.9.0
+ */
+function enqueue_block_core_playlist_editor_assets() {
+	// Only enqueue in the block editor
+	if ( ! is_admin() ) {
+		return;
+	}
+
+	wp_enqueue_script( 'wavesurfer' );
+
+	// Expose the WaveSurfer script URL to the editor
+	$wavesurfer_src = wp_scripts()->registered['wavesurfer']->src;
+	wp_add_inline_script(
+		'wp-block-editor',
+		sprintf(
+			'window.wpPlaylistWaveSurferUrl = %s;',
+			wp_json_encode( $wavesurfer_src )
+		),
+		'before'
+	);
+}
+add_action( 'enqueue_block_editor_assets', 'enqueue_block_core_playlist_editor_assets' );

@@ -1,12 +1,10 @@
 /**
- * External dependencies
- */
-import WaveSurfer from 'wavesurfer.js';
-
-/**
  * WordPress dependencies
  */
 import { store, getContext, getElement } from '@wordpress/interactivity';
+
+// Get WaveSurfer from window - it will be loaded via wp_enqueue_script
+const getWaveSurfer = () => window.WaveSurfer;
 
 const { state } = store( 'core/playlist', {
 	state: {
@@ -63,52 +61,62 @@ const { state } = store( 'core/playlist', {
 	callbacks: {
 		initWaveSurfer() {
 			const context = getContext();
-			const { ref } = getElement();
 
 			// Only initialize if not already done
-			if ( ! state.players[ context.playlistId ] ) {
-				// Get the computed color from the container
-				const containerStyles = window.getComputedStyle( ref );
-				const color = containerStyles.getPropertyValue( 'color' );
-
-				const wavesurfer = WaveSurfer.create( {
-					container: ref,
-					waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
-					progressColor: color,
-					cursorColor: color,
-					cursorWidth: 2,
-					barWidth: 2,
-					barRadius: 0,
-					height: 80,
-					barGap: 2,
-					responsive: true,
-				} );
-
-				state.players[ context.playlistId ] = wavesurfer;
-
-				// Wire up WaveSurfer events to Interactivity API
-				wavesurfer.on( 'play', () => {
-					context.isPlaying = true;
-				} );
-
-				wavesurfer.on( 'pause', () => {
-					context.isPlaying = false;
-				} );
-
-				wavesurfer.on( 'finish', () => {
-					// Trigger next song
-					const currentIndex = context.tracks.findIndex(
-						( uniqueId ) => uniqueId === context.currentId
-					);
-					const nextTrack = context.tracks[ currentIndex + 1 ];
-					if ( nextTrack ) {
-						context.currentId = nextTrack;
-						setTimeout( () => {
-							wavesurfer.play();
-						}, 1000 );
-					}
-				} );
+			if ( state.players[ context.playlistId ] ) {
+				return;
 			}
+
+			const WaveSurfer = getWaveSurfer();
+			if ( ! WaveSurfer ) {
+				// eslint-disable-next-line no-console
+				console.error( 'WaveSurfer is not loaded' );
+				return;
+			}
+
+			const { ref } = getElement();
+
+			// Get the computed color from the container
+			const containerStyles = window.getComputedStyle( ref );
+			const color = containerStyles.getPropertyValue( 'color' );
+
+			const wavesurfer = WaveSurfer.create( {
+				container: ref,
+				waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
+				progressColor: color,
+				cursorColor: color,
+				cursorWidth: 2,
+				barWidth: 2,
+				barRadius: 0,
+				height: 80,
+				barGap: 2,
+				responsive: true,
+			} );
+
+			state.players[ context.playlistId ] = wavesurfer;
+
+			// Wire up WaveSurfer events to Interactivity API
+			wavesurfer.on( 'play', () => {
+				context.isPlaying = true;
+			} );
+
+			wavesurfer.on( 'pause', () => {
+				context.isPlaying = false;
+			} );
+
+			wavesurfer.on( 'finish', () => {
+				// Trigger next song
+				const currentIndex = context.tracks.findIndex(
+					( uniqueId ) => uniqueId === context.currentId
+				);
+				const nextTrack = context.tracks[ currentIndex + 1 ];
+				if ( nextTrack ) {
+					context.currentId = nextTrack;
+					setTimeout( () => {
+						wavesurfer.play();
+					}, 1000 );
+				}
+			} );
 		},
 		loadTrack() {
 			const context = getContext();
