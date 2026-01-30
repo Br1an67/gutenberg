@@ -38,6 +38,7 @@ import { createBlock } from '@wordpress/blocks';
  * Internal dependencies
  */
 import { Caption } from '../utils/caption';
+import { getPlayerWaveSurferConfig } from './wavesurfer-utils';
 
 const ALLOWED_MEDIA_TYPES = [ 'audio' ];
 
@@ -103,24 +104,21 @@ const WaveSurferPlayer = ( { trackUrl, onEnded } ) => {
 					}
 				}
 
-				// Get the computed color from the container
+				// Get the computed colors from the container
 				const containerStyles =
 					iframeWindow.getComputedStyle( container );
 				const color = containerStyles.getPropertyValue( 'color' );
+				const backgroundColor =
+					containerStyles.getPropertyValue( 'background-color' );
 
 				// Create WaveSurfer instance using the iframe's WaveSurfer
-				wavesurfer = iframeWindow.WaveSurfer.create( {
-					container,
-					waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
-					progressColor: color,
-					cursorColor: color,
-					cursorWidth: 2,
-					barWidth: 2,
-					barRadius: 0,
-					height: 80,
-					barGap: 2,
-					responsive: true,
-				} );
+				wavesurfer = iframeWindow.WaveSurfer.create(
+					getPlayerWaveSurferConfig(
+						container,
+						color,
+						backgroundColor
+					)
+				);
 
 				wavesurferRef.current = wavesurfer;
 				setIsReady( true );
@@ -224,8 +222,8 @@ const CurrentTrack = ( { track, showImages } ) => {
 					className="wp-block-playlist__item-image"
 					src={ track.image }
 					alt=""
-					width="70px"
-					height="70px"
+					width="70"
+					height="70"
 				/>
 			) }
 			<div>
@@ -585,7 +583,6 @@ const PlaylistEdit = ( {
 					insertBlocksAfter={ insertBlocksAfter }
 					label={ __( 'Playlist caption text' ) }
 					showToolbarButton={ isSelected }
-					style={ { marginTop: 16 } }
 				/>
 			</figure>
 		</>

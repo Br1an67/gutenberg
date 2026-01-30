@@ -3,6 +3,15 @@
  */
 import { store, getContext, getElement } from '@wordpress/interactivity';
 
+/**
+ * Internal dependencies
+ */
+import {
+	TRACK_CHANGE_DELAY_MS,
+	getPlayerWaveSurferConfig,
+	getHoverWaveSurferConfig,
+} from './wavesurfer-utils';
+
 // Get WaveSurfer from window - it will be loaded via wp_enqueue_script
 const getWaveSurfer = () => window.WaveSurfer;
 
@@ -54,7 +63,7 @@ const { state } = store( 'core/playlist', {
 					if ( player ) {
 						player.play();
 					}
-				}, 1000 );
+				}, TRACK_CHANGE_DELAY_MS );
 			}
 		},
 	},
@@ -76,24 +85,59 @@ const { state } = store( 'core/playlist', {
 
 			const { ref } = getElement();
 
-			// Get the computed color from the container
+			// Get the computed colors from the container
 			const containerStyles = window.getComputedStyle( ref );
 			const color = containerStyles.getPropertyValue( 'color' );
+			const backgroundColor =
+				containerStyles.getPropertyValue( 'background-color' );
 
-			const wavesurfer = WaveSurfer.create( {
-				container: ref,
-				waveColor: `color-mix(in srgb, ${ color } 20%, #808080)`,
-				progressColor: color,
-				cursorColor: color,
-				cursorWidth: 2,
-				barWidth: 2,
-				barRadius: 0,
-				height: 80,
-				barGap: 2,
-				responsive: true,
-			} );
+			// Create progress background layer (solid color behind played portion)
+			const progressBg = document.createElement( 'div' );
+			progressBg.className = 'wp-block-playlist__waveform-progress';
+			ref.appendChild( progressBg );
+
+			// Create container for the base waveform (reduced opacity)
+			const baseContainer = document.createElement( 'div' );
+			baseContainer.className = 'wp-block-playlist__waveform-base';
+			ref.appendChild( baseContainer );
+
+			// Create container for the hover waveform (full opacity)
+			const hoverContainer = document.createElement( 'div' );
+			hoverContainer.className = 'wp-block-playlist__waveform-hover';
+			ref.appendChild( hoverContainer );
+
+			// Create base waveform (reduced opacity bars, shows progress)
+			const wavesurfer = WaveSurfer.create(
+				getPlayerWaveSurferConfig(
+					baseContainer,
+					color,
+					backgroundColor
+				)
+			);
+
+			// Create hover waveform (full opacity bars, no cursor)
+			const hoverWavesurfer = WaveSurfer.create(
+				getHoverWaveSurferConfig( hoverContainer, color )
+			);
 
 			state.players[ context.playlistId ] = wavesurfer;
+			state.players[ context.playlistId + '-hover' ] = hoverWavesurfer;
+
+			// Handle hover events to show/hide the hover waveform
+			const handleMouseLeave = () => {
+				hoverContainer.style.clipPath = 'inset(0 100% 0 0)';
+			};
+			const handleMouseMove = ( event ) => {
+				const rect = ref.getBoundingClientRect();
+				const hoverProgress =
+					( ( event.clientX - rect.left ) / rect.width ) * 100;
+				const clipRight =
+					100 - Math.max( 0, Math.min( 100, hoverProgress ) );
+				hoverContainer.style.clipPath = `inset(0 ${ clipRight }% 0 0)`;
+			};
+
+			ref.addEventListener( 'mouseleave', handleMouseLeave );
+			ref.addEventListener( 'mousemove', handleMouseMove );
 
 			// Wire up WaveSurfer events to Interactivity API
 			wavesurfer.on( 'play', () => {
@@ -104,7 +148,23 @@ const { state } = store( 'core/playlist', {
 				context.isPlaying = false;
 			} );
 
+			// Update progress background on timeupdate
+			wavesurfer.on( 'timeupdate', ( currentTime ) => {
+				const duration = wavesurfer.getDuration();
+				if ( duration > 0 ) {
+					const progress = ( currentTime / duration ) * 100;
+					progressBg.style.width = `${ progress }%`;
+				}
+			} );
+
+			// Reset progress background when seeking
+			wavesurfer.on( 'seeking', ( progress ) => {
+				progressBg.style.width = `${ progress * 100 }%`;
+			} );
+
 			wavesurfer.on( 'finish', () => {
+				// Reset progress background
+				progressBg.style.width = '0%';
 				// Trigger next song
 				const currentIndex = context.tracks.findIndex(
 					( uniqueId ) => uniqueId === context.currentId
@@ -114,17 +174,31 @@ const { state } = store( 'core/playlist', {
 					context.currentId = nextTrack;
 					setTimeout( () => {
 						wavesurfer.play();
-					}, 1000 );
+					}, TRACK_CHANGE_DELAY_MS );
 				}
 			} );
+
+			// Cleanup function for when the element is removed
+			return () => {
+				ref.removeEventListener( 'mouseleave', handleMouseLeave );
+				ref.removeEventListener( 'mousemove', handleMouseMove );
+				wavesurfer.destroy();
+				hoverWavesurfer.destroy();
+				delete state.players[ context.playlistId ];
+				delete state.players[ context.playlistId + '-hover' ];
+			};
 		},
 		loadTrack() {
 			const context = getContext();
 			const player = state.players[ context.playlistId ];
+			const hoverPlayer = state.players[ context.playlistId + '-hover' ];
 			const trackUrl = state.currentTrack.url;
 
 			if ( player && trackUrl ) {
 				player.load( trackUrl );
+			}
+			if ( hoverPlayer && trackUrl ) {
+				hoverPlayer.load( trackUrl );
 			}
 		},
 		autoPlay() {

@@ -394,11 +394,11 @@ function gutenberg_register_vendor_scripts( $scripts ) {
 		'18'
 	);
 
-	// Always use the minified version as it's the UMD build that sets window.WaveSurfer
+	// WaveSurfer for the playlist block's audio waveform visualization
 	gutenberg_override_script(
 		$scripts,
 		'wavesurfer',
-		gutenberg_url( 'node_modules/wavesurfer.js/dist/wavesurfer.min.js' ),
+		gutenberg_url( 'build/scripts/vendors/wavesurfer.min.js' ),
 		array(),
 		'7.12.1'
 	);

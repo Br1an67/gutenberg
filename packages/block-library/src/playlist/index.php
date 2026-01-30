@@ -107,8 +107,8 @@ function render_block_core_playlist( $attributes, $content, $block ) {
 		'<img
 			class="wp-block-playlist__item-image"
 			alt=""
-			width="70px"
-			height="70px"
+			width="70"
+			height="70"
 			data-wp-bind--src="state.currentTrack.image"
 			data-wp-bind--hidden="!state.currentTrack.image"
 		/>';
@@ -198,7 +198,7 @@ add_action( 'init', 'register_block_core_playlist' );
  *
  * @since 6.9.0
  */
-function enqueue_block_core_playlist_editor_assets() {
+function block_core_playlist_enqueue_editor_assets() {
 	// Only enqueue in the block editor
 	if ( ! is_admin() ) {
 		return;
@@ -217,4 +217,4 @@ function enqueue_block_core_playlist_editor_assets() {
 		'before'
 	);
 }
-add_action( 'enqueue_block_editor_assets', 'enqueue_block_core_playlist_editor_assets' );
+add_action( 'enqueue_block_editor_assets', 'block_core_playlist_enqueue_editor_assets' );
