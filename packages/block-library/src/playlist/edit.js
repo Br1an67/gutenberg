@@ -561,16 +561,16 @@ const PlaylistEdit = ( {
 				</PanelBody>
 			</InspectorControls>
 			<figure { ...blockProps }>
+				<WaveSurferPlayer
+					trackUrl={ tracks[ trackListIndex ]?.src || '' }
+					onEnded={ onTrackEnd }
+				/>
 				<Disabled isDisabled={ ! isSelected }>
 					<CurrentTrack
 						track={ tracks[ trackListIndex ] }
 						showImages={ showImages }
 					/>
 				</Disabled>
-				<WaveSurferPlayer
-					trackUrl={ tracks[ trackListIndex ]?.src || '' }
-					onEnded={ onTrackEnd }
-				/>
 				{ showTracklist && (
 					<TagName className="wp-block-playlist__tracklist">
 						{ innerBlocksProps.children }
