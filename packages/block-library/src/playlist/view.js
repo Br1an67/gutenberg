@@ -88,8 +88,35 @@ const { state } = store( 'core/playlist', {
 			// Get the computed colors from the container
 			const containerStyles = window.getComputedStyle( ref );
 			const color = containerStyles.getPropertyValue( 'color' );
-			const backgroundColor =
-				containerStyles.getPropertyValue( 'background-color' );
+
+			// Get background color - try CSS custom property first, then computed style
+			// Fall back to traversing up the DOM to find non-transparent background
+			let backgroundColor =
+				containerStyles.getPropertyValue(
+					'--wp--preset--color--base'
+				) || containerStyles.getPropertyValue( 'background-color' );
+
+			// If background is transparent, traverse up to find actual background
+			if (
+				! backgroundColor ||
+				backgroundColor === 'transparent' ||
+				backgroundColor === 'rgba(0, 0, 0, 0)'
+			) {
+				let element = ref.parentElement;
+				while ( element ) {
+					const bgColor =
+						window.getComputedStyle( element ).backgroundColor;
+					if (
+						bgColor &&
+						bgColor !== 'transparent' &&
+						bgColor !== 'rgba(0, 0, 0, 0)'
+					) {
+						backgroundColor = bgColor;
+						break;
+					}
+					element = element.parentElement;
+				}
+			}
 
 			// Create progress background layer (solid color behind played portion)
 			const progressBg = document.createElement( 'div' );
@@ -117,7 +144,11 @@ const { state } = store( 'core/playlist', {
 
 			// Create hover waveform (full opacity bars, no cursor)
 			const hoverWavesurfer = WaveSurfer.create(
-				getHoverWaveSurferConfig( hoverContainer, color )
+				getHoverWaveSurferConfig(
+					hoverContainer,
+					color,
+					backgroundColor
+				)
 			);
 
 			state.players[ context.playlistId ] = wavesurfer;

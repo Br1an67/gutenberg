@@ -75,16 +75,22 @@ export function getPlayerWaveSurferConfig(
 /**
  * Creates WaveSurfer configuration for the hover preview waveform.
  *
- * @param {HTMLElement} container The container element for the waveform.
- * @param {string}      color     The base color from computed styles.
+ * @param {HTMLElement} container       The container element for the waveform.
+ * @param {string}      color           The base color from computed styles.
+ * @param {string}      backgroundColor The background color for played bars on hover.
  * @return {Object} WaveSurfer configuration options.
  */
-export function getHoverWaveSurferConfig( container, color ) {
+export function getHoverWaveSurferConfig(
+	container,
+	color,
+	backgroundColor = null
+) {
 	return {
 		...getBaseWaveSurferConfig(),
 		container,
 		waveColor: color,
-		progressColor: color,
+		// Use background color at full opacity for played portion on hover
+		progressColor: backgroundColor || color,
 		cursorColor: 'transparent',
 		cursorWidth: 0,
 	};
