@@ -69,6 +69,8 @@ import {
 	DEFAULT_MEDIA_SIZE_SLUG,
 } from './constants';
 import { evalAspectRatio, mediaPosition } from './utils';
+import UploadingOverlay from './uploading-overlay';
+import useUploadAnnouncer from './use-upload-announcer';
 
 const { DimensionsTool, ResolutionTool } = unlock( blockEditorPrivateApis );
 
@@ -305,6 +307,13 @@ export default function Image( {
 		// This is usually 0 unless the image height is less than the line-height.
 		setOffsetTop( entry.target.offsetTop );
 	} );
+
+	// Announce upload status changes for accessibility.
+	useUploadAnnouncer(
+		temporaryURL,
+		! temporaryURL && !! url,
+		getFilename( temporaryURL )
+	);
 	const effectResizeableBoxPlacement = useCallback( () => {
 		setOffsetTop( imageElement?.offsetTop ?? 0 );
 	}, [ imageElement ] );
@@ -1068,7 +1077,12 @@ export default function Image( {
 						...shadowProps.style,
 					} }
 				/>
-				{ ( temporaryURL || isSideloading ) && <Spinner /> }
+				{ ( temporaryURL || isSideloading ) && (
+					<UploadingOverlay
+						url={ temporaryURL }
+						onCancel={ () => onSelectImage( undefined ) }
+					/>
+				) }
 			</>
 		);
 

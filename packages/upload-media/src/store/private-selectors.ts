@@ -225,3 +225,28 @@ export function getItemProgress(
 	const item = state.queue.find( ( i ) => i.id === id );
 	return item?.progress;
 }
+
+/**
+ * Returns a queue item by matching a blob URL.
+ *
+ * This is useful for components that only have access to a blob URL
+ * (like the Image block during upload) and need to find the corresponding
+ * upload queue item to get progress and operation information.
+ *
+ * @param state   Upload state.
+ * @param blobUrl Blob URL to match.
+ *
+ * @return Queue item if found, undefined otherwise.
+ */
+export function getItemByBlobUrl(
+	state: State,
+	blobUrl: string
+): QueueItem | undefined {
+	// Search through all blob URLs to find which item ID this URL belongs to
+	for ( const [ itemId, urls ] of Object.entries( state.blobUrls ) ) {
+		if ( urls.includes( blobUrl ) ) {
+			return state.queue.find( ( item ) => item.id === itemId );
+		}
+	}
+	return undefined;
+}
