@@ -226,7 +226,12 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 	);
 
 	const linerRef = useRef();
-	const getRenderValues = useEvent( () => ( { isOpen, min, openHeight } ) );
+	const getRenderValues = useEvent( () => ( {
+		isOpen,
+		max,
+		min,
+		openHeight,
+	} ) );
 
 	/** @type { EffectWheelResizing } */
 	const effectWheel = useRefEffect(
@@ -239,15 +244,43 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				return;
 			}
 			const pane = metaBoxesMainRef.current;
-			let isScrollMaxSticking = false;
 			const iframeObserver = new window.ResizeObserver( () => {
 				if ( isScrollMaxSticking ) {
 					const { scrollingElement } = iframe.contentDocument;
 					scrollingElement.scrollTop = scrollingElement.scrollHeight;
-					isScrollMaxSticking = false;
 				}
 			} );
 			iframeObserver.observe( iframe );
+
+			let unstick;
+			let isScrollMaxSticking = false;
+			const unstickAfterPointerMove = () => {
+				isScrollMaxSticking = true;
+				const threshold = 2;
+				const canvasRoot = canvas.ownerDocument.documentElement;
+				const editorRoot = pane.ownerDocument.documentElement;
+				separatorRef.current?.classList.add( 'is-auto-resizing' );
+				unstick = () => {
+					isScrollMaxSticking = false;
+					editorRoot.removeEventListener( 'pointermove', onMove );
+					canvasRoot.removeEventListener( 'pointermove', onMove );
+					separatorRef.current?.classList.remove(
+						'is-auto-resizing'
+					);
+				};
+				/** @param {PointerEvent} event */
+				const onMove = ( { movementX, movementY } ) => {
+					const biaxialMovementMax = Math.max(
+						Math.abs( movementX ),
+						Math.abs( movementY )
+					);
+					if ( biaxialMovementMax >= threshold ) {
+						unstick();
+					}
+				};
+				editorRoot.addEventListener( 'pointermove', onMove );
+				canvasRoot.addEventListener( 'pointermove', onMove );
+			};
 			/** @param { WheelEvent } event */
 			const onWheel = ( event ) => {
 				const { deltaY, currentTarget } = event;
@@ -255,7 +288,15 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				const { scrollTop, scrollHeight } =
 					contentDocument.scrollingElement;
 				const scrollMax = scrollHeight - canvasHeight;
-				if ( scrollMax - scrollTop >= 1 ) {
+				const isPaneMaximized = canvasHeight === 0;
+				const isCanvasScrolledToEnd = scrollMax - scrollTop < 1;
+				// Do nothing if the canvas is not scrolled to the bottom and not already
+				// engaged in auto-resizing.
+				if (
+					! isScrollMaxSticking &&
+					! isPaneMaximized &&
+					! isCanvasScrolledToEnd
+				) {
 					return;
 				}
 				if ( pane === currentTarget ) {
@@ -268,7 +309,9 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 						event.preventDefault();
 					}
 				}
-				isScrollMaxSticking = true;
+				if ( ! isScrollMaxSticking ) {
+					unstickAfterPointerMove( event.clientX, event.clientY );
+				}
 				const renderValues = getRenderValues();
 				const fromHeight = heightRef.current ?? pane.offsetHeight;
 				const nextHeight = fromHeight + deltaY;
@@ -281,6 +324,18 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 					persistIsOpen( true, true );
 				}
 				applyHeight( nextHeight );
+				// Scrolled down – pane made taller.
+				if ( Math.sign( deltaY ) === 1 ) {
+					// Disengage if pane is maximized.
+					if ( nextHeight >= renderValues.max ) {
+						unstick();
+					}
+				}
+				// Scrolled up - pane made shorter.
+				else if ( nextHeight <= renderValues.min ) {
+					// Disengage if pane is minimized.
+					unstick();
+				}
 			};
 			const canvasDocument = canvas.ownerDocument;
 			canvasDocument.addEventListener( 'wheel', onWheel, {
@@ -288,6 +343,7 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 			} );
 			pane.addEventListener( 'wheel', onWheel, { passive: false } );
 			return () => {
+				unstick?.();
 				iframeObserver.disconnect();
 				canvasDocument.removeEventListener( 'wheel', onWheel );
 				pane.removeEventListener( 'wheel', onWheel );
