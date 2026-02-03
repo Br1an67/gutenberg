@@ -8,11 +8,12 @@
 
 ### Enhancements
 
--   `Button`: Add minimum content width (`6ch` + padding) to prevent overly narrow buttons with short labels ([#75133](https://github.com/WordPress/gutenberg/pull/75133)).
+-   `Button`: Add minimum content width to prevent overly narrow buttons with short labels ([#75133](https://github.com/WordPress/gutenberg/pull/75133)).
 
 ### Internal
 
 -   `Button`, `InputLayout`, `Tabs`: use semantic dimension tokens ([#74557](https://github.com/WordPress/gutenberg/pull/74557)).
+-   `Tabs`: Add development-mode validation for Tab/Panel value matching and Root wrapper requirement ([#75170](https://github.com/WordPress/gutenberg/pull/75170)).
 
 ## 0.6.0 (2026-01-29)
 
