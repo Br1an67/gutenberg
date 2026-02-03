@@ -336,10 +336,15 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 					// Disengage if pane is minimized.
 					unstick();
 				}
+				// Until the pane is minimized, events over the canvas should
+				// not change its scroll position.
+				else if ( canvasDocument === currentTarget ) {
+					event.preventDefault();
+				}
 			};
 			const canvasDocument = canvas.ownerDocument;
 			canvasDocument.addEventListener( 'wheel', onWheel, {
-				passive: true,
+				passive: false,
 			} );
 			pane.addEventListener( 'wheel', onWheel, { passive: false } );
 			return () => {
