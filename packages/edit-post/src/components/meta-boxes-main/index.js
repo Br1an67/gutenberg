@@ -244,24 +244,29 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				return;
 			}
 			const pane = metaBoxesMainRef.current;
+			// When the pane is resized, scrolls the canvas to the end. This is because
+			// when the canvas is made shorter the scroll doesn’t change yet the height
+			// subtracted leaves that much distance to scroll. This leaves it ready to
+			// engage from over the meta box pane because unless the canvas is fully
+			// scrolled (or the canvas height is zero) it does not engage.
 			const iframeObserver = new window.ResizeObserver( () => {
-				if ( isScrollMaxSticking ) {
+				if ( isEngaged ) {
 					const { scrollingElement } = iframe.contentDocument;
 					scrollingElement.scrollTop = scrollingElement.scrollHeight;
 				}
 			} );
 			iframeObserver.observe( iframe );
 
-			let unstick;
-			let isScrollMaxSticking = false;
-			const unstickAfterPointerMove = () => {
-				isScrollMaxSticking = true;
+			let disengage;
+			let isEngaged = false;
+			const engageUntilPointerMoves = () => {
+				isEngaged = true;
 				const threshold = 2;
 				const canvasRoot = canvas.ownerDocument.documentElement;
 				const editorRoot = pane.ownerDocument.documentElement;
 				separatorRef.current?.classList.add( 'is-auto-resizing' );
-				unstick = () => {
-					isScrollMaxSticking = false;
+				disengage = () => {
+					isEngaged = false;
 					editorRoot.removeEventListener( 'pointermove', onMove );
 					canvasRoot.removeEventListener( 'pointermove', onMove );
 					separatorRef.current?.classList.remove(
@@ -275,7 +280,7 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 						Math.abs( movementY )
 					);
 					if ( biaxialMovementMax >= threshold ) {
-						unstick();
+						disengage();
 					}
 				};
 				editorRoot.addEventListener( 'pointermove', onMove );
@@ -288,29 +293,20 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 				const { scrollTop, scrollHeight } =
 					contentDocument.scrollingElement;
 				const scrollMax = scrollHeight - canvasHeight;
-				const isPaneMaximized = canvasHeight === 0;
 				const isCanvasScrolledToEnd = scrollMax - scrollTop < 1;
-				// Do nothing if the canvas is not scrolled to the bottom and not already
-				// engaged in auto-resizing.
-				if (
-					! isScrollMaxSticking &&
-					! isPaneMaximized &&
-					! isCanvasScrolledToEnd
-				) {
+				let shouldEngage = isCanvasScrolledToEnd;
+				// If wheeling over the pane and it’s maximized, don’t engage unless
+				// headed upward and already scrolled to the top.
+				if ( pane === currentTarget && canvasHeight === 0 ) {
+					shouldEngage =
+						Math.sign( deltaY ) === -1 &&
+						linerRef.current.scrollTop === 0;
+				}
+				if ( ! ( isEngaged || shouldEngage ) ) {
 					return;
 				}
-				if ( pane === currentTarget ) {
-					const isPaneScrolled = linerRef.current.scrollTop > 0;
-					if ( isPaneScrolled && Math.sign( deltaY ) === -1 ) {
-						return;
-					}
-					// While the canvas has height, prevents scrolling the meta boxes.
-					if ( canvasHeight > 0 ) {
-						event.preventDefault();
-					}
-				}
-				if ( ! isScrollMaxSticking ) {
-					unstickAfterPointerMove( event.clientX, event.clientY );
+				if ( ! isEngaged ) {
+					engageUntilPointerMoves( event.clientX, event.clientY );
 				}
 				const renderValues = getRenderValues();
 				const fromHeight = heightRef.current ?? pane.offsetHeight;
@@ -324,20 +320,22 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 					persistIsOpen( true, true );
 				}
 				applyHeight( nextHeight );
-				// Scrolled down – pane made taller.
+				// Wheeled downward – pane made taller.
 				if ( Math.sign( deltaY ) === 1 ) {
 					// Disengage if pane is maximized.
 					if ( nextHeight >= renderValues.max ) {
-						unstick();
+						disengage();
+					}
+					// Otherwise, if over the pane, avoid scrolling.
+					else if ( currentTarget === pane ) {
+						event.preventDefault();
 					}
 				}
-				// Scrolled up - pane made shorter.
+				// Wheeled upward - pane made shorter – disengage if minimized.
 				else if ( nextHeight <= renderValues.min ) {
-					// Disengage if pane is minimized.
-					unstick();
+					disengage();
 				}
-				// Until the pane is minimized, events over the canvas should
-				// not change its scroll position.
+				// Otherwise, if over the canvas, avoid scrolling.
 				else if ( canvasDocument === currentTarget ) {
 					event.preventDefault();
 				}
@@ -348,7 +346,7 @@ const MetaBoxesMain = forwardRef( ( { isLegacy }, ref ) => {
 			} );
 			pane.addEventListener( 'wheel', onWheel, { passive: false } );
 			return () => {
-				unstick?.();
+				disengage?.();
 				iframeObserver.disconnect();
 				canvasDocument.removeEventListener( 'wheel', onWheel );
 				pane.removeEventListener( 'wheel', onWheel );
