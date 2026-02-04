@@ -187,8 +187,8 @@ export function MediaUploadModal( {
 		titleField: 'title',
 		mediaField: 'media_thumbnail',
 		search: '',
-		page: 1,
-		perPage: 20,
+		startPosition: 1,
+		endPosition: 30,
 		filters: [],
 		layout: {
 			previewSize: 170,
