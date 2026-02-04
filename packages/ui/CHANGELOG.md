@@ -5,6 +5,7 @@
 ### New Features
 
 -   Add `Tabs` primitive ([#74652](https://github.com/WordPress/gutenberg/pull/74652)).
+-   Add `EmptyState` primitive ([#74719](https://github.com/WordPress/gutenberg/pull/74719)).
 
 ### Enhancements
 
