@@ -6,6 +6,7 @@ import clsx from 'clsx';
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { useRef } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	__experimentalHStack as HStack,
@@ -48,6 +49,7 @@ export function AddComment( {
 	const blockElement = useBlockElement( clientId );
 	const { toggleBlockSpotlight } = unlock( useDispatch( blockEditorStore ) );
 	const { selectNote } = unlock( useDispatch( editorStore ) );
+	const isSubmittingRef = useRef( false );
 
 	const unselectThread = () => {
 		selectNote( undefined );
@@ -79,6 +81,9 @@ export function AddComment( {
 					: undefined
 			}
 			onBlur={ ( event ) => {
+				if ( isSubmittingRef.current ) {
+					return;
+				}
 				if ( event.currentTarget.contains( event.relatedTarget ) ) {
 					return;
 				}
@@ -91,6 +96,7 @@ export function AddComment( {
 			</HStack>
 			<CommentForm
 				onSubmit={ async ( inputComment ) => {
+					isSubmittingRef.current = true;
 					const { id } = await onSubmit( { content: inputComment } );
 					selectNote( id );
 					focusCommentThread( id, commentSidebarRef.current );
