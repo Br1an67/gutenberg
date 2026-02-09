@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+- Upgrade React to v19 ([#61521](https://github.com/WordPress/gutenberg/pull/61521)).
+
 ### Bug Fixes
 
 - DataForm: Fix label color of array control. [#75730](https://github.com/WordPress/gutenberg/pull/75730)

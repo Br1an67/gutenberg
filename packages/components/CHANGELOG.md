@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+-    Upgrade React to v19 ([#61521](https://github.com/WordPress/gutenberg/pull/61521)).
+
 ### Code Quality
 
 -   Improve typing of `focusOnMount` prop in `Dropdown`, `Modal` and `Popover` ([#75442](https://github.com/WordPress/gutenberg/pull/75442)).
