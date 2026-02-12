@@ -28,7 +28,7 @@ export default function useCopyOnClick( ref, text, timeout = 4000 ) {
 		alternative: 'wp.compose.useCopyToClipboard',
 	} );
 
-	/** @type {React.MutableRefObject<Clipboard | undefined>} */
+	/** @type {React.RefObject<Clipboard | undefined>} */
 	const clipboardRef = useRef( undefined );
 	const [ hasCopied, setHasCopied ] = useState( false );
 
