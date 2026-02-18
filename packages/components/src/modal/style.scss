@@ -104,7 +104,7 @@
 	}
 
 	@include break-large() {
-		max-height: 70%;
+		max-height: $modal-large-max-height;
 	}
 
 	&.is-full-screen {
