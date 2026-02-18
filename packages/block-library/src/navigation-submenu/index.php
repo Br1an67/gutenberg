@@ -22,20 +22,6 @@ if ( file_exists( __DIR__ . '/../navigation/shared/get-submenu-visibility.php' )
 }
 
 /**
- * Returns the submenu visibility value with backward compatibility
- * for the deprecated openSubmenusOnClick attribute.
- *
- * @since 6.9.0
- * @deprecated Use block_core_shared_get_submenu_visibility() instead.
- *
- * @param array $context Block context from parent Navigation block.
- * @return string The visibility mode: 'hover', 'click', or 'always'.
- */
-function block_core_navigation_submenu_get_submenu_visibility( $context ) {
-	return block_core_shared_get_submenu_visibility( $context );
-}
-
-/**
  * Build an array with CSS classes and inline styles defining the font sizes
  * which will be applied to the navigation markup in the front-end.
  *
@@ -117,7 +103,7 @@ function render_block_core_navigation_submenu( $attributes, $content, $block ) {
 	}
 
 	$show_submenu_indicators = isset( $block->context['showSubmenuIcon'] ) && $block->context['showSubmenuIcon'];
-	$computed_visibility     = block_core_navigation_submenu_get_submenu_visibility( $block->context );
+	$computed_visibility     = block_core_shared_get_submenu_visibility( $block->context );
 	$open_on_click           = 'click' === $computed_visibility;
 	$open_on_hover           = 'hover' === $computed_visibility;
 	$open_on_hover_and_click = $open_on_hover && $show_submenu_indicators;
