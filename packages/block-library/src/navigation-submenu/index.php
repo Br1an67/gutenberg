@@ -50,9 +50,11 @@ function block_core_navigation_submenu_get_submenu_visibility( $context ) {
 if ( file_exists( __DIR__ . '/../navigation-link/shared/item-should-render.php' ) ) {
 	require_once __DIR__ . '/../navigation-link/shared/item-should-render.php';
 	require_once __DIR__ . '/../navigation-link/shared/render-submenu-icon.php';
+	require_once __DIR__ . '/../navigation-link/shared/build-css-font-sizes.php';
 } else {
 	require_once __DIR__ . '/navigation-link/shared/item-should-render.php';
 	require_once __DIR__ . '/navigation-link/shared/render-submenu-icon.php';
+	require_once __DIR__ . '/navigation-link/shared/build-css-font-sizes.php';
 }
 
 /**
