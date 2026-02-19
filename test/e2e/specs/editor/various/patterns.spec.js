@@ -829,7 +829,11 @@ test.describe( 'Synced pattern', () => {
 		await editor.selectBlocks(
 			editor.canvas.getByRole( 'document', { name: 'Block: Pattern' } )
 		);
-		await editor.clickBlockOptionsMenuItem( 'Disconnect pattern' );
+		await editor.clickBlockOptionsMenuItem( 'Detach pattern' );
+		await page
+			.getByRole( 'dialog' )
+			.getByRole( 'button', { name: 'Detach' } )
+			.click();
 
 		await expect.poll( editor.getBlocks ).toMatchObject( [
 			{
@@ -840,6 +844,7 @@ test.describe( 'Synced pattern', () => {
 	} );
 
 	test( 'can be created, inserted, and converted to a regular block', async ( {
+		page,
 		editor,
 		requestUtils,
 	} ) => {
@@ -864,7 +869,11 @@ test.describe( 'Synced pattern', () => {
 		await editor.selectBlocks(
 			editor.canvas.getByRole( 'document', { name: 'Block: Pattern' } )
 		);
-		await editor.clickBlockOptionsMenuItem( 'Disconnect pattern' );
+		await editor.clickBlockOptionsMenuItem( 'Detach pattern' );
+		await page
+			.getByRole( 'dialog' )
+			.getByRole( 'button', { name: 'Detach' } )
+			.click();
 
 		await expect.poll( editor.getBlocks ).toMatchObject( [
 			{
@@ -920,6 +929,7 @@ test.describe( 'Synced pattern', () => {
 	} );
 
 	test( 'can be created from multiselection and converted back to regular blocks', async ( {
+		page,
 		editor,
 		pageUtils,
 	} ) => {
@@ -965,7 +975,11 @@ test.describe( 'Synced pattern', () => {
 		await editor.selectBlocks(
 			editor.canvas.getByRole( 'document', { name: 'Block: Pattern' } )
 		);
-		await editor.clickBlockOptionsMenuItem( 'Disconnect pattern' );
+		await editor.clickBlockOptionsMenuItem( 'Detach pattern' );
+		await page
+			.getByRole( 'dialog' )
+			.getByRole( 'button', { name: 'Detach' } )
+			.click();
 
 		await expect.poll( editor.getBlocks ).toMatchObject( [
 			{
