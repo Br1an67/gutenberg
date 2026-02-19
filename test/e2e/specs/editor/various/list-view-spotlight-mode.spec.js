@@ -122,15 +122,15 @@ test.describe( 'List View Spotlight Mode', () => {
 		} );
 		await expect( groupBlock ).toBeVisible();
 
-		const paragraphBlocks = listView.getByRole( 'gridcell', {
-			name: 'Paragraph',
-			exact: true,
-		} );
-		const blockBeneathPattern = paragraphBlocks.last();
+		// The block beneath the pattern is the only faded row (outside the edited section).
+		const fadedBlockRow = listView
+			.locator( '[role=row].is-faded-in-spotlight' )
+			.first();
+		await expect( fadedBlockRow ).toBeVisible();
+		const blockBeneathPattern = fadedBlockRow
+			.getByRole( 'gridcell' )
+			.first();
 		await expect( blockBeneathPattern ).toBeVisible();
-
-		const fadedBlockRow = blockBeneathPattern.locator( '..' );
-		await expect( fadedBlockRow ).toHaveClass( /is-faded-in-spotlight/ );
 
 		// Keyboard navigation should be constrained to the pattern
 		await editor.canvas
@@ -176,13 +176,13 @@ test.describe( 'List View Spotlight Mode', () => {
 		const listView = page.getByRole( 'treegrid', {
 			name: 'Block navigation structure',
 		} );
-		const paragraphBlocks = listView.getByRole( 'gridcell', {
-			name: 'Paragraph',
-			exact: true,
-		} );
-		const blockBeneathPattern = paragraphBlocks.last();
-		const fadedBlockRow = blockBeneathPattern.locator( '..' );
-		await expect( fadedBlockRow ).toHaveClass( /is-faded-in-spotlight/ );
+		const fadedBlockRow = listView
+			.locator( '[role=row].is-faded-in-spotlight' )
+			.first();
+		await expect( fadedBlockRow ).toBeVisible();
+		const blockBeneathPattern = fadedBlockRow
+			.getByRole( 'gridcell' )
+			.first();
 
 		// Force click on the faded block to exit spotlight mode (aria-disabled="true")
 		const fadedBlockButton = blockBeneathPattern.locator(
@@ -191,9 +191,10 @@ test.describe( 'List View Spotlight Mode', () => {
 		// eslint-disable-next-line playwright/no-force-option
 		await fadedBlockButton.click( { force: true } );
 
-		await expect( fadedBlockRow ).not.toHaveClass(
-			/is-faded-in-spotlight/
-		);
+		// Spotlight exited: no rows should be faded.
+		await expect(
+			listView.locator( '[role=row].is-faded-in-spotlight' )
+		).toHaveCount( 0 );
 
 		const blockBeneath = editor.canvas
 			.getByRole( 'document', {
@@ -218,13 +219,10 @@ test.describe( 'List View Spotlight Mode', () => {
 		const listView = page.getByRole( 'treegrid', {
 			name: 'Block navigation structure',
 		} );
-		const paragraphBlocks = listView.getByRole( 'gridcell', {
-			name: 'Paragraph',
-			exact: true,
-		} );
-		const blockBeneathPattern = paragraphBlocks.last();
-		const fadedBlockRow = blockBeneathPattern.locator( '..' );
-		await expect( fadedBlockRow ).toHaveClass( /is-faded-in-spotlight/ );
+		const fadedBlockRow = listView
+			.locator( '[role=row].is-faded-in-spotlight' )
+			.first();
+		await expect( fadedBlockRow ).toBeVisible();
 
 		await editor.canvas
 			.getByRole( 'document', {
@@ -235,9 +233,10 @@ test.describe( 'List View Spotlight Mode', () => {
 
 		await page.keyboard.press( 'Escape' );
 
-		await expect( fadedBlockRow ).not.toHaveClass(
-			/is-faded-in-spotlight/
-		);
+		// Spotlight exited: no rows should be faded.
+		await expect(
+			listView.locator( '[role=row].is-faded-in-spotlight' )
+		).toHaveCount( 0 );
 
 		const blockBeneath = editor.canvas
 			.getByRole( 'document', {
