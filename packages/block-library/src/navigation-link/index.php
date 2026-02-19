@@ -145,7 +145,7 @@ function render_block_core_navigation_link( $attributes, $content, $block ) {
 		return '';
 	}
 
-	$font_sizes      = block_core_shared_navigation_build_css_font_sizes( $block->context );
+	$font_sizes      = gutenberg_block_core_shared_navigation_build_css_font_sizes( $block->context );
 	$classes         = array_merge(
 		$font_sizes['css_classes']
 	);

@@ -81,7 +81,7 @@ function render_block_core_navigation_submenu( $attributes, $content, $block ) {
 		return '';
 	}
 
-	$font_sizes      = block_core_shared_navigation_build_css_font_sizes( $block->context );
+	$font_sizes      = gutenberg_block_core_shared_navigation_build_css_font_sizes( $block->context );
 	$style_attribute = $font_sizes['inline_styles'];
 
 	// Render inner blocks first to check if any menu items will actually display.
