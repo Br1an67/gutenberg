@@ -83,15 +83,14 @@ test.describe( 'List View Spotlight Mode', () => {
 		page,
 		pageUtils
 	) {
-		// Enter spotlight mode by selecting the Group block and clicking "Edit section"
+		// Enter spotlight mode by selecting the Group block and clicking "Edit pattern"
 		await editor.selectBlocks(
 			editor.canvas.getByRole( 'document', {
 				name: 'Block: Group',
 			} )
 		);
 
-		// Click "Edit section" from the block options menu
-		await editor.clickBlockOptionsMenuItem( 'Edit section' );
+		await editor.clickBlockOptionsMenuItem( 'Edit pattern' );
 
 		// Open the list view
 		await pageUtils.pressKeys( 'access+o' );
