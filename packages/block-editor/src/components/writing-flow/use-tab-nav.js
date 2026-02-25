@@ -153,7 +153,6 @@ export default function useTabNav() {
 						nextBlockClientId &&
 						! isWithinEditedContentOnlySection( nextBlockClientId )
 					) {
-						// Prevent tabbing outside the pattern boundary.
 						event.preventDefault();
 						return;
 					}

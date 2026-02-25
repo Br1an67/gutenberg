@@ -184,7 +184,10 @@ test.describe( 'List View Spotlight Mode', () => {
 			.getByRole( 'gridcell' )
 			.first();
 
-		// Force click on the faded block to exit spotlight mode (aria-disabled="true")
+		// Faded blocks have aria-disabled="true" (they're outside the edited section).
+		// The intended UX is that clicking a faded block exits section editing. We use
+		// force: true because Playwright skips disabled elements by default; this
+		// asserts that the click handler runs and spotlight mode exits.
 		const fadedBlockButton = blockBeneathPattern.locator(
 			'.block-editor-list-view-block-contents'
 		);

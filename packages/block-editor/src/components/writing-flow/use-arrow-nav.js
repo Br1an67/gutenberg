@@ -202,7 +202,6 @@ export default function useArrowNav() {
 		 * @return {boolean} Returns true if navigation is allowed, false if it would
 		 *                   exit the pattern boundary. Always returns true when:
 		 *                   - Spotlight mode is not active
-		 *                   - Feature flag is disabled
 		 *                   - No target element provided
 		 *                   - Target block cannot be determined (fallback to allow)
 		 */
