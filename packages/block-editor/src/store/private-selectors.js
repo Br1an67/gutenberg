@@ -118,8 +118,6 @@ export function isContainerInsertableToInContentOnlyMode(
 function getEnabledClientIdsTreeUnmemoized( state, rootClientId ) {
 	const blockOrder = getBlockOrder( state, rootClientId );
 	const result = [];
-	// When editing a content-only section, show all blocks including disabled ones.
-	const showDisabledBlocks = !! state.editedContentOnlySection;
 
 	for ( const clientId of blockOrder ) {
 		const innerBlocks = getEnabledClientIdsTreeUnmemoized(
@@ -129,7 +127,14 @@ function getEnabledClientIdsTreeUnmemoized( state, rootClientId ) {
 		const isDisabled =
 			getBlockEditingMode( state, clientId ) === 'disabled';
 
-		if ( ! isDisabled || showDisabledBlocks ) {
+		// When editing a content-only section, disabled blocks that were
+		// visible before editing (tracked in listViewBlockVisibility) still
+		// appear as nodes in List View — just faded. Blocks that were already
+		// hidden (non-content blocks inside other patterns) remain hidden.
+		const showDespiteDisabled =
+			isDisabled && state.listViewBlockVisibility?.has( clientId );
+
+		if ( ! isDisabled || showDespiteDisabled ) {
 			result.push( { clientId, innerBlocks } );
 		} else {
 			result.push( ...innerBlocks );
@@ -154,7 +159,7 @@ export const getEnabledClientIdsTree = createRegistrySelector( () =>
 		state.blocks.order,
 		state.derivedBlockEditingModes,
 		state.blockEditingModes,
-		state.editedContentOnlySection,
+		state.listViewBlockVisibility,
 	] )
 );
 
