@@ -66,6 +66,8 @@ function InlineEditButton( {
 			selectBlock( clientId );
 		} else {
 			stopEditingContentOnlySection();
+			// Keep the selected section pattern or content block selected after exiting.
+			selectBlock( clientId );
 		}
 	};
 
