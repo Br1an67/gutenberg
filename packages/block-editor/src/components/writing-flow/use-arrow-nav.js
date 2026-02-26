@@ -165,7 +165,6 @@ export default function useArrowNav() {
 		hasMultiSelection,
 		__unstableIsFullySelected,
 		getEditedContentOnlySection,
-		isWithinEditedContentOnlySection,
 	} = unlock( useSelect( blockEditorStore ) );
 	const blockEditorActions = useDispatch( blockEditorStore );
 	const { selectBlock } = blockEditorActions;
@@ -187,44 +186,6 @@ export default function useArrowNav() {
 				node
 			);
 			return closestTabbable && getBlockClientId( closestTabbable );
-		}
-
-		/**
-		 * Checks if keyboard navigation target is within the edited pattern boundary
-		 * when in spotlight mode (content-only pattern editing).
-		 *
-		 * During spotlight mode, keyboard navigation (arrow keys) should be constrained
-		 * to blocks within the pattern being edited. This function enforces that
-		 * constraint by checking if the navigation target is within the edited section.
-		 *
-		 * @param {Element} closestTabbable The target DOM element for navigation.
-		 *
-		 * @return {boolean} Returns true if navigation is allowed, false if it would
-		 *                   exit the pattern boundary. Always returns true when:
-		 *                   - Spotlight mode is not active
-		 *                   - No target element provided
-		 *                   - Target block cannot be determined (fallback to allow)
-		 */
-		function canNavigateWithinPatternBoundary( closestTabbable ) {
-			if ( ! closestTabbable ) {
-				return true;
-			}
-
-			const editedContentOnlySection = getEditedContentOnlySection();
-			if ( ! editedContentOnlySection ) {
-				return true;
-			}
-
-			// Get the block client ID of the navigation target.
-			const targetBlockClientId = getBlockClientId( closestTabbable );
-
-			// If we can't determine the target block, allow navigation (fallback).
-			if ( ! targetBlockClientId ) {
-				return true;
-			}
-
-			// Check if the target block is within the edited section.
-			return isWithinEditedContentOnlySection( targetBlockClientId );
 		}
 
 		function onKeyDown( event ) {
@@ -341,14 +302,6 @@ export default function useArrowNav() {
 				);
 
 				if ( closestTabbable ) {
-					// Check if navigation would exit the pattern boundary.
-					if (
-						! canNavigateWithinPatternBoundary( closestTabbable )
-					) {
-						event.preventDefault();
-						return;
-					}
-
 					placeCaretAtVerticalEdge(
 						closestTabbable,
 						// When Alt is pressed, place the caret at the furthest
@@ -369,15 +322,6 @@ export default function useArrowNav() {
 					isReverseDir,
 					node
 				);
-
-				// Check if navigation would exit the pattern boundary.
-				if (
-					closestTabbable &&
-					! canNavigateWithinPatternBoundary( closestTabbable )
-				) {
-					event.preventDefault();
-					return;
-				}
 
 				placeCaretAtHorizontalEdge( closestTabbable, isReverse );
 				event.preventDefault();
