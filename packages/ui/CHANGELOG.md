@@ -6,6 +6,10 @@
 
 -   Add `Text` primitive with predefined typographic variants (`heading-2xl` through `heading-sm`, `body-xl` through `body-sm`) built on design tokens.
 
+### Enhancements
+
+-   `Dialog`: Add `--wp-ui-dialog-z-index` CSS custom property for legacy z-index compatibility ([#75874](https://github.com/WordPress/gutenberg/pull/75874)).
+
 ### Bug Fixes
 
 -   `IconButton`: Hide tooltip when the button is truly disabled ([#75754](https://github.com/WordPress/gutenberg/pull/75754)).
