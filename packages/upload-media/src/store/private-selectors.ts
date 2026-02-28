@@ -250,3 +250,27 @@ export function getItemByBlobUrl(
 	}
 	return undefined;
 }
+
+/**
+ * Returns a queue item by matching an attachment ID.
+ *
+ * This is useful as a fallback when no blob URL is available,
+ * such as during sideloading (client-side media processing after
+ * initial upload) where `temporaryURL` is falsy but the attachment
+ * ID is known.
+ *
+ * @param state        Upload state.
+ * @param attachmentId Attachment ID to match.
+ *
+ * @return Queue item if found, undefined otherwise.
+ */
+export function getItemByAttachmentId(
+	state: State,
+	attachmentId: number
+): QueueItem | undefined {
+	return state.queue.find(
+		( item ) =>
+			item.attachment?.id === attachmentId ||
+			item.sourceAttachmentId === attachmentId
+	);
+}

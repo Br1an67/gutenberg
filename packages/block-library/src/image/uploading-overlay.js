@@ -39,15 +39,21 @@ function getOperationLabel( operation ) {
 /**
  * Component that displays upload progress overlay on the image block.
  *
- * @param {Object}   props          Component props.
- * @param {string}   props.url      The blob URL of the uploading image.
- * @param {Function} props.onCancel Callback when cancel button is clicked.
+ * @param {Object}   props              Component props.
+ * @param {string}   props.url          The blob URL of the uploading image.
+ * @param {number}   props.attachmentId The attachment ID, used as fallback when url is not available.
+ * @param {Function} props.onCancel     Callback when cancel button is clicked.
  */
-export default function UploadingOverlay( { url, onCancel } ) {
+export default function UploadingOverlay( { url, attachmentId, onCancel } ) {
 	const { progress, currentOperation, itemId } = useSelect(
 		( select ) => {
-			const { getItemByBlobUrl } = unlock( select( uploadMediaStore ) );
-			const item = getItemByBlobUrl( url );
+			const { getItemByBlobUrl, getItemByAttachmentId } = unlock(
+				select( uploadMediaStore )
+			);
+			const item =
+				( url && getItemByBlobUrl( url ) ) ||
+				( attachmentId && getItemByAttachmentId( attachmentId ) ) ||
+				undefined;
 
 			return {
 				progress: item?.progress,
@@ -55,7 +61,7 @@ export default function UploadingOverlay( { url, onCancel } ) {
 				itemId: item?.id,
 			};
 		},
-		[ url ]
+		[ url, attachmentId ]
 	);
 
 	const { cancelItem } = useDispatch( uploadMediaStore );
