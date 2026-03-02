@@ -9,6 +9,7 @@
 
 ### Enhancements
 
+-   `Notice`: Use `Text` component for `Title` and `Description` typography.
 -   `Dialog`: Add `--wp-ui-dialog-z-index` CSS custom property for legacy z-index compatibility ([#75874](https://github.com/WordPress/gutenberg/pull/75874)).
 
 ### Bug Fixes
