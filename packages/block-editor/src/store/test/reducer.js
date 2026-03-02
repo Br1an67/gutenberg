@@ -2749,39 +2749,6 @@ describe( 'state', () => {
 			expect( state.selectionEnd ).toEqual( {} );
 		} );
 
-		it( 'should clear selection when exiting content-only section editing (EDIT_CONTENT_ONLY_SECTION without clientId)', () => {
-			const clientId = 'ribs';
-			const original = deepFreeze( {
-				selectionStart: { clientId },
-				selectionEnd: { clientId },
-			} );
-			const action = {
-				type: 'EDIT_CONTENT_ONLY_SECTION',
-			};
-
-			const state = selection( original, action );
-
-			expect( state.selectionStart ).toEqual( {} );
-			expect( state.selectionEnd ).toEqual( {} );
-		} );
-
-		it( 'should not clear selection when entering content-only section editing (EDIT_CONTENT_ONLY_SECTION with clientId)', () => {
-			const clientId = 'ribs';
-			const original = deepFreeze( {
-				selectionStart: { clientId },
-				selectionEnd: { clientId },
-			} );
-			const action = {
-				type: 'EDIT_CONTENT_ONLY_SECTION',
-				clientId: 'pattern-block',
-			};
-
-			const state = selection( original, action );
-
-			expect( state.selectionStart ).toBe( original.selectionStart );
-			expect( state.selectionEnd ).toBe( original.selectionEnd );
-		} );
-
 		it( 'should return same reference if clearing selection but no selection', () => {
 			const original = deepFreeze( {
 				selectionStart: {},

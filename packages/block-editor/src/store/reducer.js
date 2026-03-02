@@ -1410,13 +1410,6 @@ function selectionHelper( state = {}, action ) {
 
 			return state;
 		}
-		case 'EDIT_CONTENT_ONLY_SECTION': {
-			// When stopping content-only editing (no clientId), also clear selection.
-			if ( ! action.clientId && state.clientId ) {
-				return {};
-			}
-			return state;
-		}
 		case 'SELECT_BLOCK':
 			if ( action.clientId === state.clientId ) {
 				return state;
@@ -2566,193 +2559,156 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 	traverseBlockTree( state, treeClientId, ( block ) => {
 		const { clientId, name: blockName } = block;
 
-		// When editing a content-only section, blocks outside it must be disabled
-		// regardless of any explicit block editing mode set on the block itself.
-		// Check here so the existing explicit-modes early-return below doesn't
-		// accidentally keep an outside block at a non-disabled mode.
-		const isOutsideEditedSection =
-			state.editedContentOnlySection &&
-			clientId !== state.editedContentOnlySection &&
-			! findParentInClientIdsList( state, clientId, [
-				state.editedContentOnlySection,
-			] );
+		const hasEditedContentOnlySection = !! state.editedContentOnlySection;
+		let isWithinEditedContentOnlySection = false;
+		if ( hasEditedContentOnlySection ) {
+			isWithinEditedContentOnlySection =
+				clientId === state.editedContentOnlySection ||
+				!! findParentInClientIdsList( state, clientId, [
+					state.editedContentOnlySection,
+				] );
 
-		// Explicit modes, disabled-ancestor inheritance, zoom-out, and synced-pattern
-		// checks only apply when the block is inside the edited section (or there is
-		// no edited section). Blocks outside the edited section must always be
-		// disabled — skip straight to the unified block below.
-		if ( ! isOutsideEditedSection ) {
-			// If the block already has an explicit block editing mode set,
-			// don't override it.
-			if ( state.blockEditingModes.has( clientId ) ) {
-				return;
-			}
-
-			// Disabled explicit block editing modes are inherited by children.
-			// It's an expensive calculation, so only do it if there are disabled blocks.
-			if ( hasDisabledBlocks ) {
-				// Look through parents to find one with an explicit block editing mode.
-				let ancestorBlockEditingMode;
-				let parent = state.blocks.parents.get( clientId );
-				while ( parent !== undefined ) {
-					if ( state.blockEditingModes.has( parent ) ) {
-						// Checking the explicit block editing mode will be slower,
-						// as the block editing mode is more likely to be set on a
-						// distant ancestor.
-						ancestorBlockEditingMode =
-							state.blockEditingModes.get( parent );
-					}
-					if ( ancestorBlockEditingMode ) {
-						break;
-					}
-					parent = state.blocks.parents.get( parent );
-				}
-
-				// If the ancestor block editing mode is disabled, it's inherited by the child.
-				if ( ancestorBlockEditingMode === 'disabled' ) {
-					derivedBlockEditingModes.set( clientId, 'disabled' );
-					return;
-				}
-			}
-
-			if ( isZoomedOut ) {
-				// If the root block is the section root set its editing mode to contentOnly.
-				if ( clientId === sectionRootClientId ) {
-					derivedBlockEditingModes.set( clientId, 'contentOnly' );
-					return;
-				}
-
-				// There are no sections, so everything else is disabled.
-				if ( ! sectionClientIds?.length ) {
-					derivedBlockEditingModes.set( clientId, 'disabled' );
-					return;
-				}
-
-				if ( sectionClientIds.includes( clientId ) ) {
-					derivedBlockEditingModes.set( clientId, 'contentOnly' );
-					return;
-				}
-
-				// If zoomed out, all blocks that aren't sections or the section root are
-				// disabled.
+			// When a contentOnly section is being edited, all blocks outside
+			// the section are disabled. This should never be overridable by any
+			// other block editing modes, it helps to constrain keyboard navigation
+			// to within the edited section.
+			if ( ! isWithinEditedContentOnlySection ) {
 				derivedBlockEditingModes.set( clientId, 'disabled' );
 				return;
-			}
-
-			if ( syncedPatternClientIds.length ) {
-				// Synced pattern blocks (core/block).
-				if ( syncedPatternClientIds.includes( clientId ) ) {
-					// This is a synced pattern nested in another synced pattern,
-					// disable the core/block itself.
-					if (
-						findParentInClientIdsList(
-							state,
-							clientId,
-							syncedPatternClientIds
-						)
-					) {
-						derivedBlockEditingModes.set( clientId, 'disabled' );
-						return;
-					}
-
-					// Else do nothing, use the default block editing mode.
-					return;
-				}
-
-				// Inner blocks of synced patterns.
-				const parentSyncedPatternClientId = findParentInClientIdsList(
-					state,
-					clientId,
-					syncedPatternClientIds
-				);
-				if ( parentSyncedPatternClientId ) {
-					// This is an inner block of a synced pattern that's nested in another synced pattern,
-					// disable its contents.
-					if (
-						findParentInClientIdsList(
-							state,
-							parentSyncedPatternClientId,
-							syncedPatternClientIds
-						)
-					) {
-						derivedBlockEditingModes.set( clientId, 'disabled' );
-						return;
-					}
-
-					if ( hasBindings( block ) ) {
-						derivedBlockEditingModes.set( clientId, 'contentOnly' );
-						return;
-					}
-
-					// Synced pattern content without a binding isn't editable
-					// from the instance, the user has to edit the pattern source,
-					// so return 'disabled'.
-					derivedBlockEditingModes.set( clientId, 'disabled' );
-					return;
-				}
 			}
 		}
 
-		// Unified block: handles section editing modes and contentOnly parents.
-		// When editedContentOnlySection is not set, this works identically to the
-		// previous contentOnly-only logic. When a section IS being edited, it
-		// additionally sets disabled/default modes for blocks outside/inside the
-		// section.
-		if ( state.editedContentOnlySection || contentOnlyParents.length ) {
-			// Blocks within the edited section are fully editable.
-			if ( state.editedContentOnlySection ) {
-				if ( clientId === state.editedContentOnlySection ) {
-					derivedBlockEditingModes.set( clientId, 'default' );
-					return;
-				}
+		// If the block already has an explicit block editing mode set,
+		// don't override it.
+		if ( state.blockEditingModes.has( clientId ) ) {
+			return;
+		}
 
-				const isWithinEdited = !! findParentInClientIdsList(
-					state,
-					clientId,
-					[ state.editedContentOnlySection ]
-				);
-				if ( isWithinEdited ) {
-					derivedBlockEditingModes.set( clientId, 'default' );
-					return;
+		// Disabled explicit block editing modes are inherited by children.
+		// It's an expensive calculation, so only do it if there are disabled blocks.
+		if ( hasDisabledBlocks ) {
+			// Look through parents to find one with an explicit block editing mode.
+			let ancestorBlockEditingMode;
+			let parent = state.blocks.parents.get( clientId );
+			while ( parent !== undefined ) {
+				if ( state.blockEditingModes.has( parent ) ) {
+					// Checking the explicit block editing mode will be slower,
+					// as the block editing mode is more likely to be set on a
+					// distant ancestor.
+					ancestorBlockEditingMode =
+						state.blockEditingModes.get( parent );
 				}
-
-				// Block is outside the edited section. Fall through to the
-				// contentOnlyParents check.
+				if ( ancestorBlockEditingMode ) {
+					break;
+				}
+				parent = state.blocks.parents.get( parent );
 			}
 
-			// Check for a contentOnly parent. This determines the editing
-			// mode (contentOnly vs disabled).
-			if ( contentOnlyParents.length ) {
-				const hasContentOnlyParent = !! findParentInClientIdsList(
-					state,
-					clientId,
-					contentOnlyParents
-				);
-
-				if ( hasContentOnlyParent ) {
-					if ( isContentBlock( blockName ) ) {
-						if ( state.editedContentOnlySection ) {
-							// Content block outside edited section: disabled for editing.
-							derivedBlockEditingModes.set(
-								clientId,
-								'disabled'
-							);
-						} else {
-							derivedBlockEditingModes.set(
-								clientId,
-								'contentOnly'
-							);
-						}
-					} else {
-						derivedBlockEditingModes.set( clientId, 'disabled' );
-					}
-					return;
-				}
-			}
-
-			// Outside the edited section with no contentOnly parent.
-			if ( state.editedContentOnlySection ) {
+			// If the ancestor block editing mode is disabled, it's inherited by the child.
+			if ( ancestorBlockEditingMode === 'disabled' ) {
 				derivedBlockEditingModes.set( clientId, 'disabled' );
+				return;
+			}
+		}
+
+		if ( isZoomedOut ) {
+			// If the root block is the section root set its editing mode to contentOnly.
+			if ( clientId === sectionRootClientId ) {
+				derivedBlockEditingModes.set( clientId, 'contentOnly' );
+				return;
+			}
+
+			// There are no sections, so everything else is disabled.
+			if ( ! sectionClientIds?.length ) {
+				derivedBlockEditingModes.set( clientId, 'disabled' );
+				return;
+			}
+
+			if ( sectionClientIds.includes( clientId ) ) {
+				derivedBlockEditingModes.set( clientId, 'contentOnly' );
+				return;
+			}
+
+			// If zoomed out, all blocks that aren't sections or the section root are
+			// disabled.
+			derivedBlockEditingModes.set( clientId, 'disabled' );
+			return;
+		}
+
+		if ( syncedPatternClientIds.length ) {
+			// Synced pattern blocks (core/block).
+			if ( syncedPatternClientIds.includes( clientId ) ) {
+				// This is a synced pattern nested in another synced pattern,
+				// disable the core/block itself.
+				if (
+					findParentInClientIdsList(
+						state,
+						clientId,
+						syncedPatternClientIds
+					)
+				) {
+					derivedBlockEditingModes.set( clientId, 'disabled' );
+					return;
+				}
+
+				// Else do nothing, use the default block editing mode.
+				return;
+			}
+
+			// Inner blocks of synced patterns.
+			const parentSyncedPatternClientId = findParentInClientIdsList(
+				state,
+				clientId,
+				syncedPatternClientIds
+			);
+			if ( parentSyncedPatternClientId ) {
+				// This is an inner block of a synced pattern that's nested in another synced pattern,
+				// disable its contents.
+				if (
+					findParentInClientIdsList(
+						state,
+						parentSyncedPatternClientId,
+						syncedPatternClientIds
+					)
+				) {
+					derivedBlockEditingModes.set( clientId, 'disabled' );
+					return;
+				}
+
+				if ( hasBindings( block ) ) {
+					derivedBlockEditingModes.set( clientId, 'contentOnly' );
+					return;
+				}
+
+				// Synced pattern content without a binding isn't editable
+				// from the instance, the user has to edit the pattern source,
+				// so return 'disabled'.
+				derivedBlockEditingModes.set( clientId, 'disabled' );
+				return;
+			}
+		}
+
+		// Set the edited section and all blocks within it to 'default', so that all changes can be made.
+		if ( hasEditedContentOnlySection && isWithinEditedContentOnlySection ) {
+			derivedBlockEditingModes.set( clientId, 'default' );
+			// When there's an editedContentOnlySection, it overrides any modes that are usually
+			// set for `contentOnlyParents`, return early to prevent continuing to code below.
+			return;
+		}
+
+		// Handle `templateLock=contentOnly` blocks and unsynced patterns.
+		if ( contentOnlyParents.length ) {
+			const hasContentOnlyParent = !! findParentInClientIdsList(
+				state,
+				clientId,
+				contentOnlyParents
+			);
+			if ( hasContentOnlyParent ) {
+				if ( isContentBlock( blockName ) ) {
+					derivedBlockEditingModes.set( clientId, 'contentOnly' );
+				} else {
+					derivedBlockEditingModes.set( clientId, 'disabled' );
+				}
 			}
 		}
 	} );
@@ -3128,9 +3084,11 @@ export function withDerivedBlockEditingModes( reducer ) {
 					!! state?.settings?.[ isIsolatedEditorKey ] !==
 						!! nextState?.settings?.[ isIsolatedEditorKey ]
 				) {
-					const derivedBlockEditingModes =
-						getDerivedBlockEditingModesForTree( nextState );
-					return { ...nextState, derivedBlockEditingModes };
+					return {
+						...nextState,
+						derivedBlockEditingModes:
+							getDerivedBlockEditingModesForTree( nextState ),
+					};
 				}
 				break;
 			}
@@ -3141,11 +3099,10 @@ export function withDerivedBlockEditingModes( reducer ) {
 			case 'SET_ZOOM_LEVEL': {
 				// Recompute the entire tree if the editor mode or zoom level changes,
 				// or if all the blocks are reset.
-				const derivedBlockEditingModes =
-					getDerivedBlockEditingModesForTree( nextState );
 				return {
 					...nextState,
-					derivedBlockEditingModes,
+					derivedBlockEditingModes:
+						getDerivedBlockEditingModesForTree( nextState ),
 				};
 			}
 		}
