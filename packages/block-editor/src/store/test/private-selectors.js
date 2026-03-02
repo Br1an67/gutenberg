@@ -444,33 +444,37 @@ describe( 'private selectors', () => {
 			] );
 		} );
 
-		it( 'should include disabled blocks when a content-only section is being edited (listViewBlockVisibility set)', () => {
+		it( 'should include disabled blocks when a content-only section is being edited', () => {
 			const state = {
 				...baseState,
+				// getListViewBlockVisibility needs these slices; empty means no
+				// contentOnly parents exist in this fixture.
+				blockListSettings: {},
+				blocks: {
+					...baseState.blocks,
+					attributes: new Map(),
+					controlledInnerBlocks: {},
+				},
+				// The Group (ef45d5fd) is the section being edited.
+				editedContentOnlySection:
+					'ef45d5fd-5234-4fd5-ac4f-c3736c7f9337',
 				blockEditingModes: new Map( [
 					[ '', 'disabled' ],
 					[ 'b26fc763-417d-4f01-b81c-2ec61e14a972', 'contentOnly' ],
 					[ '9b9c5c3f-2e46-4f02-9e14-9fe9515b958f', 'contentOnly' ],
 				] ),
+				// The edited Group itself has 'default' mode (set by the reducer)
+				// so it does not appear in derivedBlockEditingModes. Only the
+				// Header (6cf70164), which is outside the edited section, is disabled.
 				derivedBlockEditingModes: new Map( [
 					[ '6cf70164-9097-4460-bcbf-200560546988', 'disabled' ],
-					[ 'ef45d5fd-5234-4fd5-ac4f-c3736c7f9337', 'disabled' ],
 				] ),
-				// listViewBlockVisibility is computed by withDerivedBlockEditingModes
-				// when editedContentOnlySection is set. It contains blocks that are
-				// 'disabled' for editing but should still appear in List View.
-				listViewBlockVisibility: new Set( [
-					'6cf70164-9097-4460-bcbf-200560546988', // outside edited section, was visible before
-					'ef45d5fd-5234-4fd5-ac4f-c3736c7f9337', // edited section root
-					'b26fc763-417d-4f01-b81c-2ec61e14a972', // inside edited section
-					'9b9c5c3f-2e46-4f02-9e14-9fe9515b958f', // inside edited section
-					'b3247f75-fd94-4fef-97f9-5bfd162cc416', // inside edited section
-					'e178812d-ce5e-48c7-a945-8ae4ffcbbb7c', // inside edited section
-				] ),
+				// listViewBlockVisibility is now a memoized selector — not stored
+				// in state. getListViewBlockVisibility computes it on demand.
 			};
 			// When editing a content-only section, list view shows blocks that were
-			// visible before editing (via listViewBlockVisibility), preserving the
-			// structure of other patterns rather than revealing all disabled blocks.
+			// visible before editing, preserving context without revealing previously
+			// hidden structural blocks from other patterns.
 			expect( getEnabledClientIdsTree( state ) ).toEqual( [
 				{
 					clientId: '6cf70164-9097-4460-bcbf-200560546988',

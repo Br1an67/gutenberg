@@ -2512,14 +2512,6 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 		state?.zoomLevel < 100 || state?.zoomLevel === 'auto-scaled';
 	const derivedBlockEditingModes = new Map();
 
-	// When editing a content-only section, track which blocks should be visible
-	// in List View. This set contains blocks that are 'disabled' for editing but
-	// should still appear as nodes in List View — either because they're within
-	// the edited section, or because they would have been visible before editing
-	// started. Only computed for full traversals (treeClientId === '').
-	const listViewBlockVisibility =
-		state.editedContentOnlySection && ! treeClientId ? new Set() : null;
-
 	// When there are sections, the majority of blocks are disabled,
 	// so the default block editing mode is set to disabled.
 	const sectionRootClientId = state.settings?.[ sectionRootClientIdKey ];
@@ -2705,13 +2697,12 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 		// When editedContentOnlySection is not set, this works identically to the
 		// previous contentOnly-only logic. When a section IS being edited, it
 		// additionally sets disabled/default modes for blocks outside/inside the
-		// section and populates listViewBlockVisibility.
+		// section.
 		if ( state.editedContentOnlySection || contentOnlyParents.length ) {
 			// Blocks within the edited section are fully editable.
 			if ( state.editedContentOnlySection ) {
 				if ( clientId === state.editedContentOnlySection ) {
 					derivedBlockEditingModes.set( clientId, 'default' );
-					listViewBlockVisibility?.add( clientId );
 					return;
 				}
 
@@ -2722,18 +2713,15 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 				);
 				if ( isWithinEdited ) {
 					derivedBlockEditingModes.set( clientId, 'default' );
-					listViewBlockVisibility?.add( clientId );
 					return;
 				}
 
 				// Block is outside the edited section. Fall through to the
-				// contentOnlyParents check so that listViewBlockVisibility can
-				// be set using the same logic (no duplication needed).
+				// contentOnlyParents check.
 			}
 
-			// Check for a contentOnly parent. This determines both the editing
-			// mode (contentOnly vs disabled) and, when editing a section,
-			// whether the block should remain visible in List View.
+			// Check for a contentOnly parent. This determines the editing
+			// mode (contentOnly vs disabled).
 			if ( contentOnlyParents.length ) {
 				const hasContentOnlyParent = !! findParentInClientIdsList(
 					state,
@@ -2744,13 +2732,11 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 				if ( hasContentOnlyParent ) {
 					if ( isContentBlock( blockName ) ) {
 						if ( state.editedContentOnlySection ) {
-							// Content block outside edited section: disabled for
-							// editing but still shown (faded) in List View.
+							// Content block outside edited section: disabled for editing.
 							derivedBlockEditingModes.set(
 								clientId,
 								'disabled'
 							);
-							listViewBlockVisibility?.add( clientId );
 						} else {
 							derivedBlockEditingModes.set(
 								clientId,
@@ -2758,24 +2744,20 @@ function getDerivedBlockEditingModesForTree( state, treeClientId = '' ) {
 							);
 						}
 					} else {
-						// Non-content block: disabled and hidden from List View.
 						derivedBlockEditingModes.set( clientId, 'disabled' );
 					}
 					return;
 				}
 			}
 
-			// Outside the edited section with no contentOnly parent (e.g. a
-			// regular top-level paragraph). Disabled for editing, but visible
-			// in List View so the user can see context.
+			// Outside the edited section with no contentOnly parent.
 			if ( state.editedContentOnlySection ) {
 				derivedBlockEditingModes.set( clientId, 'disabled' );
-				listViewBlockVisibility?.add( clientId );
 			}
 		}
 	} );
 
-	return { derivedBlockEditingModes, listViewBlockVisibility };
+	return derivedBlockEditingModes;
 }
 
 /**
@@ -2822,11 +2804,10 @@ function getDerivedBlockEditingModesUpdates( {
 	} );
 
 	addedBlocks?.forEach( ( addedBlock ) => {
-		const { derivedBlockEditingModes: updates } =
-			getDerivedBlockEditingModesForTree(
-				nextState,
-				addedBlock.clientId
-			);
+		const updates = getDerivedBlockEditingModesForTree(
+			nextState,
+			addedBlock.clientId
+		);
 
 		if ( updates.size ) {
 			if ( ! nextDerivedBlockEditingModes ) {
@@ -2887,8 +2868,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -2908,8 +2887,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -2981,8 +2958,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 
@@ -3038,8 +3013,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -3072,8 +3045,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -3093,8 +3064,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -3118,8 +3087,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -3142,8 +3109,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 						derivedBlockEditingModes:
 							nextDerivedBlockEditingModes ??
 							state.derivedBlockEditingModes,
-						listViewBlockVisibility:
-							state.listViewBlockVisibility ?? null,
 					};
 				}
 				break;
@@ -3163,15 +3128,9 @@ export function withDerivedBlockEditingModes( reducer ) {
 					!! state?.settings?.[ isIsolatedEditorKey ] !==
 						!! nextState?.settings?.[ isIsolatedEditorKey ]
 				) {
-					const {
-						derivedBlockEditingModes,
-						listViewBlockVisibility,
-					} = getDerivedBlockEditingModesForTree( nextState );
-					return {
-						...nextState,
-						derivedBlockEditingModes,
-						listViewBlockVisibility,
-					};
+					const derivedBlockEditingModes =
+						getDerivedBlockEditingModesForTree( nextState );
+					return { ...nextState, derivedBlockEditingModes };
 				}
 				break;
 			}
@@ -3182,12 +3141,11 @@ export function withDerivedBlockEditingModes( reducer ) {
 			case 'SET_ZOOM_LEVEL': {
 				// Recompute the entire tree if the editor mode or zoom level changes,
 				// or if all the blocks are reset.
-				const { derivedBlockEditingModes, listViewBlockVisibility } =
+				const derivedBlockEditingModes =
 					getDerivedBlockEditingModesForTree( nextState );
 				return {
 					...nextState,
 					derivedBlockEditingModes,
-					listViewBlockVisibility,
 				};
 			}
 		}
@@ -3196,8 +3154,6 @@ export function withDerivedBlockEditingModes( reducer ) {
 		// state need to be preserved.
 		nextState.derivedBlockEditingModes =
 			state?.derivedBlockEditingModes ?? new Map();
-		nextState.listViewBlockVisibility =
-			state?.listViewBlockVisibility ?? null;
 
 		return nextState;
 	};
