@@ -143,6 +143,41 @@
 	--wpds-font-size-xs: 11px; /* Extra small font size */
 	--wpds-font-weight-medium: 499; /* Medium font weight for emphasis and headings */
 	--wpds-font-weight-regular: 400; /* Regular font weight for body text */
+	--wpds-motion-duration-lg: 300ms; /* Deliberate animations like slides and reveals */
+	--wpds-motion-duration-md: 200ms; /* Standard transitions like menus and popovers */
+	--wpds-motion-duration-sm: 100ms; /* Micro-interactions like focus rings and state changes */
+	--wpds-motion-duration-xl: 400ms; /* Extended animations like complex or multi-step transitions */
+	--wpds-motion-duration-xs: 50ms; /* Micro-delays and transition offsets */
+	--wpds-motion-easing-accelerate: cubic-bezier(
+		1,
+		0,
+		1,
+		1
+	); /* Accelerating easing for elements leaving the screen */
+	--wpds-motion-easing-decelerate: cubic-bezier(
+		0,
+		0,
+		0,
+		1
+	); /* Decelerating easing for elements entering the screen, such as menus and popovers */
+	--wpds-motion-easing-emphasized-accelerate: cubic-bezier(
+		1,
+		0,
+		0.2,
+		1
+	); /* Expressive exit for prominent elements like dialogs and drawers */
+	--wpds-motion-easing-emphasized-decelerate: cubic-bezier(
+		0.29,
+		0,
+		0,
+		1
+	); /* Expressive entrance for prominent elements like dialogs and drawers */
+	--wpds-motion-easing-standard: cubic-bezier(
+		0.4,
+		0,
+		0.2,
+		1
+	); /* Balanced easing for state changes like hover, color, and toggle transitions */
 }
 
 [data-wpds-theme-provider-id][data-wpds-density='compact'] {

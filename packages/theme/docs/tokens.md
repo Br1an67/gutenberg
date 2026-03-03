@@ -149,6 +149,21 @@ Do not edit directly.
 | `--wpds-elevation-md` | For components that offer additional actions. Example: Menus, Command Palette                                                     |
 | `--wpds-elevation-lg` | For components that confirm decisions or handle necessary interruptions. Example: Modals.                                         |
 
+### Motion
+
+| Variable name                                | Description                                                                      |
+| -------------------------------------------- | -------------------------------------------------------------------------------- |
+| `--wpds-motion-duration-xs`                  | Micro-delays and transition offsets                                              |
+| `--wpds-motion-duration-sm`                  | Micro-interactions like focus rings and state changes                            |
+| `--wpds-motion-duration-md`                  | Standard transitions like menus and popovers                                     |
+| `--wpds-motion-duration-lg`                  | Deliberate animations like slides and reveals                                    |
+| `--wpds-motion-duration-xl`                  | Extended animations like complex or multi-step transitions                       |
+| `--wpds-motion-easing-standard`              | Balanced easing for state changes like hover, color, and toggle transitions      |
+| `--wpds-motion-easing-decelerate`            | Decelerating easing for elements entering the screen, such as menus and popovers |
+| `--wpds-motion-easing-accelerate`            | Accelerating easing for elements leaving the screen                              |
+| `--wpds-motion-easing-emphasized-decelerate` | Expressive entrance for prominent elements like dialogs and drawers              |
+| `--wpds-motion-easing-emphasized-accelerate` | Expressive exit for prominent elements like dialogs and drawers                  |
+
 ### Typography
 
 | Variable name                 | Description                                  |
