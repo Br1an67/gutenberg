@@ -160,6 +160,55 @@ describe( 'getRevisions', () => {
 		triggerFetch.mockReset();
 	} );
 
+	// eslint-disable-next-line jest/no-disabled-tests
+	it.skip( 'preserves all revisions when getRevision resolves after getRevisions', async () => {
+		let resolveSlowFetch;
+		const slowFetchPromise = new Promise( ( resolve ) => {
+			resolveSlowFetch = resolve;
+		} );
+
+		triggerFetch.mockImplementation( ( { path } ) => {
+			if ( path && path.includes( 'revisions' ) ) {
+				// Single revision fetch: return slow promise.
+				if ( /revisions\/\d+/.test( path ) ) {
+					return slowFetchPromise;
+				}
+				// Collection fetch: return immediately.
+				return Promise.resolve( {
+					json: () => Promise.resolve( REVISIONS ),
+					headers: { get: () => String( REVISIONS.length ) },
+				} );
+			}
+			return Promise.resolve( {} );
+		} );
+
+		const resolveSelectStore = registry.resolveSelect( coreDataStore );
+
+		// Start getRevision first (slow), then getRevisions (fast).
+		const revisionPromise = resolveSelectStore.getRevision(
+			KIND,
+			NAME,
+			RECORD_KEY,
+			1,
+			{ context: 'edit' }
+		);
+		await resolveSelectStore.getRevisions( KIND, NAME, RECORD_KEY, {
+			context: 'edit',
+		} );
+
+		// Now resolve the slow single-revision fetch.
+		resolveSlowFetch( REVISIONS[ 0 ] );
+		await revisionPromise;
+
+		// Wait for all pending thunks (receiveRevisions) to settle.
+		await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+		const allRevisions = registry
+			.select( coreDataStore )
+			.getRevisions( KIND, NAME, RECORD_KEY, { context: 'edit' } );
+		expect( allRevisions ).toHaveLength( REVISIONS.length );
+	} );
+
 	it( 'preserves all revisions when getRevision is called after getRevisions with the same query', async () => {
 		triggerFetch.mockImplementation( ( { path } ) => {
 			if ( path && path.includes( 'revisions' ) ) {
