@@ -339,15 +339,9 @@ async function runPerformanceTests( branches, options ) {
 	// @ts-ignore
 	await SimpleGit( testRunnerDir ).raw( 'checkout', testRunnerBranch );
 
-	logAtIndent( 2, 'Installing custom npm with linked strategy fix' );
-	await runShellScript(
-		`bash -c "if [ ! -d /tmp/npm-cli ]; then git clone --depth 1 --branch v11-gb-test https://github.com/manzoorwanijk/npm-cli.git /tmp/npm-cli && (cd /tmp/npm-cli && node scripts/resetdeps.js); fi"`,
-		testRunnerDir
-	);
-
 	logAtIndent( 2, 'Installing dependencies and building' );
 	await runShellScript(
-		`bash -c "source $HOME/.nvm/nvm.sh && nvm install && NPM_DIR=\\$(npm root -g)/npm && rm -rf \\$NPM_DIR && ln -s /tmp/npm-cli \\$NPM_DIR && npm ci && npx playwright install chromium --with-deps && npm run build"`,
+		`bash -c "source $HOME/.nvm/nvm.sh && nvm install && npm ci && npx playwright install chromium --with-deps && npm run build"`,
 		testRunnerDir
 	);
 
@@ -390,7 +384,7 @@ async function runPerformanceTests( branches, options ) {
 
 		logAtIndent( 3, 'Installing dependencies and building' );
 		await runShellScript(
-			`bash -c "source $HOME/.nvm/nvm.sh && nvm install && NPM_DIR=\\$(npm root -g)/npm && rm -rf \\$NPM_DIR && ln -s /tmp/npm-cli \\$NPM_DIR && npm ci && npm run build"`,
+			`bash -c "source $HOME/.nvm/nvm.sh && nvm install && npm ci && npm run build"`,
 			buildDir
 		);
 
