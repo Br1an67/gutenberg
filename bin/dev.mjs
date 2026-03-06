@@ -120,10 +120,7 @@ const headTracker = {
 	getCurrentHead() {
 		try {
 			return fs
-				.readFileSync(
-					path.join( ROOT_DIR, '.git', 'HEAD' ),
-					'utf8'
-				)
+				.readFileSync( path.join( ROOT_DIR, '.git', 'HEAD' ), 'utf8' )
 				.trim();
 		} catch {
 			return null;
