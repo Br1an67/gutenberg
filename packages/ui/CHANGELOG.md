@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.8.0 (2026-03-04)
+
+### Breaking Changes
+
+-   `InputLayout`: Remove the `type` prop from `InputLayout.Slot` ([#76011](https://github.com/WordPress/gutenberg/pull/76011)).
+
 ### New Features
 
 -   Add `Notice` primitive ([#75981](https://github.com/WordPress/gutenberg/pull/75981)).
@@ -9,6 +15,7 @@
 
 ### Enhancements
 
+-   `Field.Label`, `Fieldset.Legend`: Add `hideFromVision` prop to visually hide the label while keeping it accessible to screen readers ([#76052](https://github.com/WordPress/gutenberg/pull/76052)).
 -   `Dialog`: Add `--wp-ui-dialog-z-index` CSS custom property for legacy z-index compatibility ([#75874](https://github.com/WordPress/gutenberg/pull/75874)).
 
 ### Bug Fixes
