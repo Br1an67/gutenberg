@@ -2,12 +2,14 @@ import {
 	Button,
 	privateApis as componentsPrivateApis,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useMemo, useState } from '@wordpress/element';
 import {
 	privateApis,
 	type PostEditorAwarenessState,
 } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
+import { store as preferencesStore } from '@wordpress/preferences';
 
 import { CollaboratorsList } from './list';
 import { unlock } from '../../lock-unlock';
@@ -42,10 +44,32 @@ export function CollaboratorsPresence( {
 		postType
 	) as PostEditorAwarenessState[];
 
-	// Filter out current user - we never show ourselves in the list
+	const showOwnCursor = useSelect(
+		( select ) =>
+			select( preferencesStore ).get( 'core', 'showCollaborationCursor' ),
+		[]
+	);
+
+	// Filter out current user for the avatar group display
 	const otherActiveCollaborators = activeCollaborators.filter(
 		( collaborator ) => ! collaborator.isMe
 	);
+
+	// When showing own cursor, include self in the dropdown list (sorted first)
+	const collaboratorsForList = useMemo( () => {
+		if ( ! showOwnCursor ) {
+			return otherActiveCollaborators;
+		}
+		return [ ...activeCollaborators ].sort( ( a, b ) => {
+			if ( a.isMe && ! b.isMe ) {
+				return -1;
+			}
+			if ( ! a.isMe && b.isMe ) {
+				return 1;
+			}
+			return 0;
+		} );
+	}, [ showOwnCursor, activeCollaborators, otherActiveCollaborators ] );
 
 	const [ isPopoverVisible, setIsPopoverVisible ] = useState( false );
 	const [ popoverAnchor, setPopoverAnchor ] = useState< HTMLElement | null >(
@@ -71,33 +95,29 @@ export function CollaboratorsPresence( {
 					aria-label={ sprintf(
 						// translators: %d: number of online collaborators.
 						__( 'Collaborators list, %d online' ),
-						otherActiveCollaborators.length
+						collaboratorsForList.length
 					) }
 				>
 					<AvatarGroup max={ 3 }>
-						{ otherActiveCollaborators.map(
-							( collaboratorState ) => (
-								<Avatar
-									key={ collaboratorState.clientId }
-									src={ getAvatarUrl(
-										collaboratorState.collaboratorInfo
-											.avatar_urls
-									) }
-									name={
-										collaboratorState.collaboratorInfo.name
-									}
-									borderColor={ getAvatarBorderColor(
-										collaboratorState.collaboratorInfo.id
-									) }
-									size="small"
-								/>
-							)
-						) }
+						{ collaboratorsForList.map( ( collaboratorState ) => (
+							<Avatar
+								key={ collaboratorState.clientId }
+								src={ getAvatarUrl(
+									collaboratorState.collaboratorInfo
+										.avatar_urls
+								) }
+								name={ collaboratorState.collaboratorInfo.name }
+								borderColor={ getAvatarBorderColor(
+									collaboratorState.collaboratorInfo.id
+								) }
+								size="small"
+							/>
+						) ) }
 					</AvatarGroup>
 				</Button>
 				{ isPopoverVisible && (
 					<CollaboratorsList
-						activeCollaborators={ otherActiveCollaborators }
+						activeCollaborators={ collaboratorsForList }
 						popoverAnchor={ popoverAnchor }
 						setIsPopoverVisible={ setIsPopoverVisible }
 					/>

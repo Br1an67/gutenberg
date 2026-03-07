@@ -4,8 +4,11 @@
 import {
 	privateApis as coreDataPrivateApis,
 	SelectionType,
+	type PostEditorAwarenessState as ActiveCollaborator,
 } from '@wordpress/core-data';
+import { useSelect } from '@wordpress/data';
 import { useEffect, useRef } from '@wordpress/element';
+import { store as preferencesStore } from '@wordpress/preferences';
 
 /**
  * Internal dependencies
@@ -27,6 +30,12 @@ export function useBlockHighlighting(
 	postId: number | null,
 	postType: string | null
 ) {
+	const showOwnCursor = useSelect(
+		( select ) =>
+			select( preferencesStore ).get( 'core', 'showCollaborationCursor' ),
+		[]
+	);
+
 	const highlightedBlockIds = useRef< Set< string > >( new Set() );
 	const userStates = useActiveCollaborators(
 		postId ?? null,
@@ -62,12 +71,18 @@ export function useBlockHighlighting(
 			} );
 		};
 
+		const hasOtherCollaborators = userStates.some(
+			( u: ActiveCollaborator ) => ! u.isMe
+		);
+
 		const blocksToHighlight = userStates
-			.map( ( userState: any ) => {
+			.map( ( userState: ActiveCollaborator ) => {
 				const isWholeBlockSelected =
 					userState.editorState?.selection?.type ===
 					SelectionType.WholeBlock;
-				const shouldDrawUser = ! userState.isMe;
+				const shouldDrawUser =
+					! userState.isMe ||
+					( showOwnCursor && hasOtherCollaborators );
 
 				if ( isWholeBlockSelected && shouldDrawUser ) {
 					const { localClientId } = resolveSelection(
@@ -121,7 +136,7 @@ export function useBlockHighlighting(
 				highlightedBlockIds.current.add( blockId );
 			}
 		} );
-	}, [ userStates, blockEditorDocument, resolveSelection ] );
+	}, [ userStates, blockEditorDocument, resolveSelection, showOwnCursor ] );
 }
 
 const getBlockElementById = (
