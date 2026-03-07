@@ -5,7 +5,7 @@
 ### New Features
 
 -   Add `Card` and `CollapsibleCard` primitives ([#76252](https://github.com/WordPress/gutenberg/pull/76252)).
--   Add `Collapsible` primitive ([#XXXXX](https://github.com/WordPress/gutenberg/pull/XXXXX)).
+-   Add `Collapsible` primitive ([#76280](https://github.com/WordPress/gutenberg/pull/76280)).
 
 ### Enhancements
 
