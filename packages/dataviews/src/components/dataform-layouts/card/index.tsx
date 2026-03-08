@@ -263,11 +263,6 @@ export default function FormCardField< Item >( {
 				open={ isOpen }
 				onOpenChange={ handleOpenChange }
 			>
-				{ /* TODO: CollapsibleCard.Header's trigger uses a generic
-			   accessible label. When multiple collapsible cards exist,
-			   screen readers can't distinguish between triggers.
-			   CollapsibleCard needs a way to customize the trigger label
-			   (e.g. a `triggerLabel` prop or auto-deriving from Card.Title). */ }
 				<CollapsibleCard.Header>
 					{ headerContent }
 				</CollapsibleCard.Header>
